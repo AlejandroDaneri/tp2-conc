@@ -1,1 +1,7 @@
-# tp2-conc
+# Buscador de Sinónimos Rústico
+
+## Ejecución
+
+```
+cargo run <input-file>
+```
