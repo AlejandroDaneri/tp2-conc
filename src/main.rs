@@ -2,7 +2,6 @@ extern crate reqwest;
 
 mod synonym;
 
-use std::env::args;
 use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufRead};
@@ -16,6 +15,8 @@ use log4rs::{
     config::{Appender, Config, Root},
     filter::threshold::ThresholdFilter,
 };
+use crate::synonym::thesaurus::Thesaurus;
+use crate::synonym::Finder;
 
 fn init_log() -> Result<(), Box<dyn std::error::Error>>  {
     let level = log::LevelFilter::Debug;
@@ -79,9 +80,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for line in buffered.lines() {
         let word = line.unwrap();
         debug!("Searching synonyms for {}", word);
-        find_synonyms(&word);
 
-        let q = Thesaurus::new_query(word.as_str());
+        let q = Thesaurus::new_query(&word);
         let synonyms = q.find_synonyms()?;
         debug!("Sinonimos: {:?}", synonyms);
 
