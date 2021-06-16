@@ -27,12 +27,12 @@ pub struct Logger {
 
 impl Logger {
 
-    fn log(&self, l: &str, m: String) {
-        let t = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
+    fn log(&self, level: &str, msg: String) {
+        let time = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
             Ok(n) => n.as_micros(),
             Err(_) => panic!("SystemTime before UNIX EPOCH!"),
         };
-        let msg = format!("{:?} {} - {}", t, l, m);
+        let msg = format!("{:?} {} - {}", time, level, msg);
         println!("{}", msg);
     }
 
