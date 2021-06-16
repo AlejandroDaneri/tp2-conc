@@ -1,24 +1,58 @@
 extern crate reqwest;
 
 mod synonym;
+mod logger;
 
-use std::env::args;
+use std::env;
+use std::fs::File;
+use std::io::{BufReader, BufRead};
 
-use crate::synonym::Finder;
 use crate::synonym::thesaurus::Thesaurus;
+use crate::synonym::Finder;
 
-const ARGS_MIN_LEN: usize = 2;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let argv: Vec<String> = args().collect();
-    if args().len() < ARGS_MIN_LEN {
-        // println!("Usage: {:?} <input file>", argv[0]);
-        println!("Usage: specify word to search as an argument");
-    } else {
-        let word = argv[1].clone();
-        let q = Thesaurus::new_query(word.as_str());
-        let synonyms = q.find_synonyms()?;
-        println!("Sinonimos: {:?}", synonyms);
+
+    let log = logger::Logger::new(logger::Level::Debug);
+    log.debug("Configure log".to_string());
+
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() <= 1 {
+        println!("Missing path arg");
+        log.error("Missing path arg".to_string());
+        return Ok(())
     }
+
+    let path= args[1].as_str();
+
+    log.debug("Opening file".to_string());
+    let f = match File::open(path) {
+        Ok(file) => file,
+        Err(error) => panic!("Problem opening the file: {:?}", error),
+    };
+
+    let buffered = BufReader::new(f);
+
+    log.debug("Reading file".to_string());
+    for line in buffered.lines() {
+        let word = line.unwrap();
+        log.debug(format!("Searching synonyms for {}", word));
+
+        let synonyms_thesaurus = match Thesaurus::new_query(&word).find_synonyms() {
+            Ok(syns) => syns,
+            Err(error) => {
+                log.warn(format!("Problem getting synonyms from Thesaurus: {:?}", error));
+                continue
+            },
+        };
+
+        log.info(format!("Sinonimos: {:?}", synonyms_thesaurus));
+
+    }
+
+    log.debug("Finish".to_string());
+
     Ok(())
+
 }
