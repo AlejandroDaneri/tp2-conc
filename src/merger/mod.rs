@@ -1,6 +1,4 @@
-pub struct Merger {} //TODO: change to mod
-
-impl Merger {
+pub mod merger {
     pub fn merge(first: &Vec<String>, second: &Vec<String>) -> Vec<String> {
         [&first[..], &second[..]].concat()
     }
@@ -8,6 +6,8 @@ impl Merger {
 
 #[cfg(test)]
 mod happy_path {
+    use crate::merger::merger::merge;
+
     fn assert_contains(result: &Vec<String>, expected: &[&str]) {
         for word in expected.iter() {
             assert!(result.contains(&word.to_string()));
@@ -24,11 +24,10 @@ mod happy_path {
 
     #[test]
     fn merge_with_two_wellformed_arrays() {
-        use crate::merger::Merger;
         let v1 = build_test_vector(&["as", "bs"]);
         let v2 = build_test_vector(&["cs", "ds"]);
 
-        let res = Merger::merge(&v1, &v2);
+        let res = merge(&v1, &v2);
 
         assert_contains(&res, &["as", "bs", "cs", "ds"]);
         assert_eq!(res.len(), 4);
@@ -36,12 +35,10 @@ mod happy_path {
 
     #[test]
     fn merge_with_empty_array() {
-        use crate::merger::Merger;
-
         let v1 = build_test_vector(&["as", "bs"]);
         let v2 = build_test_vector(&[]);
 
-        let res = Merger::merge(&v1, &v2);
+        let res = merge(&v1, &v2);
         assert_contains(&res, &["as", "bs"]);
         assert_eq!(res.len(), 2);
     }
@@ -49,6 +46,8 @@ mod happy_path {
 
 #[cfg(test)]
 mod duplicates {
+    use crate::merger::merger::merge;
+
     fn assert_contains(result: &Vec<String>, expected: &[&str]) {
         for word in expected.iter() {
             assert!(result.contains(&word.to_string()));
@@ -63,14 +62,13 @@ mod duplicates {
         result
     }
 
+    //PENDING
     #[test]
     fn merge_with_duplicates() {
-        use crate::merger::Merger;
-
         let v1 = build_test_vector(&["as", "bs"]);
         let v2 = build_test_vector(&["as"]);
 
-        let res = Merger::merge(&v1, &v2);
+        let res = merge(&v1, &v2);
         assert_contains(&res, &["as", "bs"]);
         assert_eq!(res.len(), 2);
     }
