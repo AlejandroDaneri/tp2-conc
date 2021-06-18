@@ -46,3 +46,32 @@ mod happy_path {
         assert_eq!(res.len(), 2);
     }
 }
+
+#[cfg(test)]
+mod duplicates {
+    fn assert_contains(result: &Vec<String>, expected: &[&str]) {
+        for word in expected.iter() {
+            assert!(result.contains(&word.to_string()));
+        }
+    }
+
+    fn build_test_vector(elements: &[&str]) -> Vec<String> {
+        let mut result = Vec::<String>::new();
+        for word in elements.iter() {
+            result.push(word.to_string());
+        }
+        result
+    }
+
+    #[test]
+    fn merge_with_duplicates() {
+        use crate::merger::Merger;
+
+        let v1 = build_test_vector(&["as", "bs"]);
+        let v2 = build_test_vector(&["as"]);
+
+        let res = Merger::merge(&v1, &v2);
+        assert_contains(&res, &["as", "bs"]);
+        assert_eq!(res.len(), 2);
+    }
+}
