@@ -1,14 +1,14 @@
 extern crate reqwest;
 
+mod counter;
 mod logger;
-mod merger;
 mod synonym;
 
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use crate::merger::merger::count;
+use crate::counter::count;
 use crate::synonym::thesaurus::Thesaurus;
 use crate::synonym::Finder;
 

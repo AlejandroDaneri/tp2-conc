@@ -1,8 +1,16 @@
-pub mod merger; //TODO : fix warn clippy
+use std::collections::HashMap;
+
+pub fn count(words: &[String]) -> HashMap<String, i32> {
+    let mut counts = HashMap::new();
+    words
+        .iter()
+        .for_each(|w| *counts.entry(w.to_string()).or_insert(0) += 1);
+    counts
+}
 
 #[cfg(test)]
 mod one_vector {
-    use crate::merger::merger::count;
+    use crate::counter::count;
     use std::collections::HashMap;
 
     fn build_test_vector(elements: &[&str]) -> Vec<String> {
