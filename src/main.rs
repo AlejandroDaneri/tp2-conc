@@ -8,7 +8,7 @@ use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use crate::counter::count;
+use crate::counter::Counter;
 use crate::synonym::thesaurus::Thesaurus;
 use crate::synonym::Finder;
 
@@ -52,7 +52,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         log.info(format!("Sinonimos: {:?}", synonyms_thesaurus));
 
-        let res = count(&synonyms_thesaurus);
+        let mut counter = Counter::new();
+        let res = counter.count(&synonyms_thesaurus);
         log.info(format!("COUNT : {:?}", res))
     }
 

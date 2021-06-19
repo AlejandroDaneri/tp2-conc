@@ -1,16 +1,26 @@
 use std::collections::HashMap;
+#[derive(Clone)]
+pub struct Counter {
+    count: HashMap<String, i32>,
+}
 
-pub fn count(words: &[String]) -> HashMap<String, i32> {
-    let mut counts = HashMap::new();
-    words
-        .iter()
-        .for_each(|w| *counts.entry(w.to_string()).or_insert(0) += 1);
-    counts
+impl Counter {
+    pub fn new() -> Counter {
+        Counter {
+            count: HashMap::<String, i32>::new(),
+        }
+    }
+    pub fn count(&mut self, words: &[String]) -> HashMap<String, i32> {
+        words
+            .iter()
+            .for_each(|w| *self.count.entry(w.to_string()).or_insert(0) += 1);
+        self.count.clone()
+    }
 }
 
 #[cfg(test)]
 mod one_vector {
-    use crate::counter::count;
+    use crate::counter::Counter;
     use std::collections::HashMap;
 
     fn build_test_vector(elements: &[&str]) -> Vec<String> {
@@ -24,7 +34,9 @@ mod one_vector {
     #[test]
     fn count_words() {
         let v1 = build_test_vector(&["a", "b", "c", "d"]);
-        let res = count(&v1);
+
+        let mut counter = Counter::new();
+        let res = counter.count(&v1);
 
         let mut expected = HashMap::<String, i32>::new();
         expected.insert("b".to_string(), 1);
@@ -38,7 +50,8 @@ mod one_vector {
     #[test]
     fn empty_vector() {
         let v1 = build_test_vector(&[]);
-        let res = count(&v1);
+        let mut counter = Counter::new();
+        let res = counter.count(&v1);
 
         let expected = HashMap::<String, i32>::new();
 
@@ -48,7 +61,8 @@ mod one_vector {
     #[test]
     fn duplicates_in_a_vector() {
         let v1 = build_test_vector(&["a", "b", "c", "d", "b"]);
-        let res = count(&v1);
+        let mut counter = Counter::new();
+        let res = counter.count(&v1);
 
         let mut expected = HashMap::<String, i32>::new();
         expected.insert("b".to_string(), 2);
