@@ -1,5 +1,6 @@
 pub mod thesaurus;
 pub mod yourdictionary;
+pub mod merriamwebster;
 use reqwest::blocking;
 
 const APP_USER_AGENT: &str = "curl/7.68.0";

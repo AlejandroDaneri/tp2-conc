@@ -9,6 +9,7 @@ use std::io::{BufRead, BufReader};
 
 use crate::synonym::thesaurus::Thesaurus;
 use crate::synonym::yourdictionary::YourDictionary;
+use crate::synonym::merriamwebster::MerriamWebster;
 use crate::synonym::Finder;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -60,8 +61,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         };
 
+        let synonyms_merr = match MerriamWebster::new_query(&word).find_synonyms() {
+            Ok(syns) => syns,
+            Err(error) => {
+                log.warn(format!(
+                    "Problem getting synonyms from MerriamWebster: {:?}",
+                    error
+                ));
+                continue;
+            }
+        };
+
         log.info(format!("Sinonimos thesaurus: {:?}", synonyms_thesaurus));
         log.info(format!("Sinonimos yourdictionary: {:?}", synonyms_your));
+        log.info(format!("Sinonimos merriamwebster: {:?}", synonyms_merr));
     }
 
     log.debug("Finish".to_string());
