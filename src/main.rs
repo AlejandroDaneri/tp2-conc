@@ -26,43 +26,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let path = args[1].as_str();
 
     log.debug("Opening file".to_string());
-    let f = match File::open(path) {
-        Ok(file) => file,
-        Err(error) => panic!("Problem opening the file: {:?}", error),
-    };
+    let f = File::open(path)?;
 
     let buffered = BufReader::new(f);
 
     log.debug("Reading file".to_string());
-    for line in buffered.lines() {
-        let word = line.unwrap();
-        log.debug(format!("Searching synonyms for {}", word));
 
-        let synonyms_thesaurus = match Thesaurus::new_query(&word).find_synonyms() {
-            Ok(syns) => syns,
-            Err(error) => {
+    let words: Vec<String> = buffered.lines().flatten().collect();
+    let thesaurus_queries = words.iter().map(|word| Thesaurus::new_query(&word));
+
+    let results = thesaurus_queries
+        .map(|query| query.find_synonyms());
+        
+
+    results.map(|result| {
+            if result.is_err() {
                 log.warn(format!(
                     "Problem getting synonyms from Thesaurus: {:?}",
-                    error
+                    result
                 ));
-                continue;
             }
-        };
-
-        let synonyms_your = match YourDictionary::new_query(&word).find_synonyms() {
-            Ok(syns) => syns,
-            Err(error) => {
-                log.warn(format!(
-                    "Problem getting synonyms from YourDictionary: {:?}",
-                    error
-                ));
-                continue;
-            }
-        };
-
-        log.info(format!("Sinonimos thesaurus: {:?}", synonyms_thesaurus));
-        log.info(format!("Sinonimos yourdictionary: {:?}", synonyms_your));
-    }
+            result
+        })
+        .flatten()
+        .for_each(|syn_list| {
+            log.debug(format!("Synonyms: {:?}", syn_list));
+        });
 
     log.debug("Finish".to_string());
 

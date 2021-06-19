@@ -6,7 +6,7 @@ pub enum Level {
     Error = 4,
     Warn = 3,
     Info = 2,
-    Debug = 1
+    Debug = 1,
 }
 
 impl PartialEq<Level> for Level {
@@ -22,11 +22,10 @@ impl PartialOrd<Level> for Level {
 }
 
 pub struct Logger {
-    level: Level
+    level: Level,
 }
 
 impl Logger {
-
     fn log(&self, level: &str, msg: String) {
         let time = match SystemTime::now().duration_since(SystemTime::UNIX_EPOCH) {
             Ok(n) => n.as_micros(),
@@ -64,5 +63,3 @@ impl Logger {
         }
     }
 }
-
-
