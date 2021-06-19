@@ -8,8 +8,7 @@ use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use merger::merger::merge;
-
+use crate::merger::merger::count;
 use crate::synonym::thesaurus::Thesaurus;
 use crate::synonym::Finder;
 
@@ -54,8 +53,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         log.info(format!("Sinonimos: {:?}", synonyms_thesaurus));
 
         //provisorio para tener un feedback del merger
-        let res = merge(&synonyms_thesaurus, &synonyms_thesaurus);
-        log.info(format!("merge: {:?}", res))
+        let res = count(&synonyms_thesaurus);
+        log.info(format!("COUNT : {:?}", res))
     }
 
     log.debug("Finish".to_string());
