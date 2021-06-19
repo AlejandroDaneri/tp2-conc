@@ -52,7 +52,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         log.info(format!("Sinonimos: {:?}", synonyms_thesaurus));
 
-        //provisorio para tener un feedback del merger
         let res = count(&synonyms_thesaurus);
         log.info(format!("COUNT : {:?}", res))
     }
