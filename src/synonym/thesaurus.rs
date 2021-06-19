@@ -1,12 +1,14 @@
 use super::Finder;
 
 pub struct Thesaurus {
-    word: String
+    word: String,
 }
 
 impl Thesaurus {
     pub fn new_query(word: &str) -> Self {
-        Self{word: word.to_owned()}
+        Self {
+            word: word.to_owned(),
+        }
     }
 }
 

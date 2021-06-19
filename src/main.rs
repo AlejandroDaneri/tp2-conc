@@ -1,5 +1,6 @@
 extern crate reqwest;
 
+mod counter;
 mod logger;
 mod synonym;
 
@@ -7,9 +8,10 @@ use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+use crate::counter::Counter;
+use crate::synonym::merriamwebster::MerriamWebster;
 use crate::synonym::thesaurus::Thesaurus;
 use crate::synonym::yourdictionary::YourDictionary;
-use crate::synonym::merriamwebster::MerriamWebster;
 use crate::synonym::Finder;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -75,6 +77,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         log.info(format!("Sinonimos thesaurus: {:?}", synonyms_thesaurus));
         log.info(format!("Sinonimos yourdictionary: {:?}", synonyms_your));
         log.info(format!("Sinonimos merriamwebster: {:?}", synonyms_merr));
+
+        let mut counter = Counter::new();
+        counter.count(&synonyms_thesaurus);
+        counter.count(&synonyms_merr);
+        let res = counter.count(&synonyms_your);
+        log.info(format!("COUNT : {:?}", res));
     }
 
     log.debug("Finish".to_string());
