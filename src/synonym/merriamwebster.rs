@@ -1,4 +1,4 @@
-use super::Finder;
+use super::{Finder, FinderError};
 
 pub struct MerriamWebster {
     word: String,
@@ -20,7 +20,7 @@ impl Finder for MerriamWebster {
         )
     }
 
-    fn parse_body(&self, body: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    fn parse_body(&self, body: &str) -> Vec<String> {
         let from = body.find("thes-list syn-list").unwrap();
         let to = body.find("thes-list rel-list").unwrap();
         let body = &body[from..to];
@@ -31,6 +31,6 @@ impl Finder for MerriamWebster {
                 let synonym_end = body[synonym_beg..].find('<').unwrap() + synonym_beg;
                 body[synonym_beg..synonym_end].to_owned()
             });
-        Ok(synonyms.collect::<Vec<String>>())
+        synonyms.collect::<Vec<String>>()
     }
 }

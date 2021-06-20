@@ -1,4 +1,4 @@
-use super::Finder;
+use super::{Finder, FinderError};
 
 pub struct YourDictionary {
     word: String,
@@ -20,12 +20,12 @@ impl Finder for YourDictionary {
         )
     }
 
-    fn parse_body(&self, body: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    fn parse_body(&self, body: &str) -> Vec<String> {
         let synonyms = body.match_indices("\"synonym-link\"").map(|matched| {
             let synonym_beg = body[matched.0..].find('>').unwrap() + 1 + matched.0;
             let synonym_end = body[synonym_beg..].find('<').unwrap() + synonym_beg;
             body[synonym_beg..synonym_end].to_owned()
         });
-        Ok(synonyms.collect::<Vec<String>>())
+        synonyms.collect::<Vec<String>>()
     }
 }

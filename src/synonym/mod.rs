@@ -5,18 +5,27 @@ use reqwest::blocking;
 
 const APP_USER_AGENT: &str = "curl/7.68.0";
 
+#[derive(Debug)]
+pub struct FinderError;
+
+impl From<reqwest::Error> for FinderError {    
+    fn from(error: reqwest::Error) -> Self {
+        FinderError
+    }
+}
+
 pub trait Finder {
     fn url(&self) -> String;
-    fn parse_body(&self, body: &str) -> Result<Vec<String>, Box<dyn std::error::Error>>;
+    fn parse_body(&self, body: &str) -> Vec<String>;
 
-    fn find_synonyms(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    fn find_synonyms(&self) -> Result<Vec<String>, FinderError> {
         let url = self.url();
-        println!("Url: {}", url);
         let client = blocking::Client::builder()
             .user_agent(APP_USER_AGENT)
             .build()?;
         let request = client.get(url).send()?;
         let body = request.text()?;
-        self.parse_body(body.as_str())
+        Ok(self.parse_body(body.as_str()))
     }
 }
+

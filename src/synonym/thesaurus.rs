@@ -17,7 +17,7 @@ impl Finder for Thesaurus {
         format!("https://www.thesaurus.com/browse/{}", self.word.as_str())
     }
 
-    fn parse_body(&self, body: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    fn parse_body(&self, body: &str) -> Vec<String> {
         let mut search_l = 0;
         let mut search_r = 0;
 
@@ -57,6 +57,6 @@ impl Finder for Thesaurus {
             res.push(left2.to_owned())
         }
 
-        Ok(res)
+        res
     }
 }
