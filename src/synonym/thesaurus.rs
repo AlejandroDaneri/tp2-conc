@@ -4,15 +4,13 @@ pub struct Thesaurus {
     word: String,
 }
 
-impl Thesaurus {
-    pub fn new_query(word: &str) -> Self {
+impl Finder for Thesaurus {
+    fn new_query(word: &str) -> Self {
         Self {
             word: word.to_owned(),
         }
     }
-}
 
-impl Finder for Thesaurus {
     fn url(&self) -> String {
         format!("https://www.thesaurus.com/browse/{}", self.word.as_str())
     }

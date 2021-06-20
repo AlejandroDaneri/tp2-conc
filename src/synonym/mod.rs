@@ -8,13 +8,16 @@ const APP_USER_AGENT: &str = "curl/7.68.0";
 #[derive(Debug)]
 pub struct FinderError;
 
-impl From<reqwest::Error> for FinderError {    
+impl From<reqwest::Error> for FinderError {
     fn from(error: reqwest::Error) -> Self {
         FinderError
     }
 }
 
 pub trait Finder {
+    fn new_query(word: &str) -> Self
+    where
+        Self: Sized;
     fn url(&self) -> String;
     fn parse_body(&self, body: &str) -> Vec<String>;
 
@@ -28,4 +31,3 @@ pub trait Finder {
         Ok(self.parse_body(body.as_str()))
     }
 }
-

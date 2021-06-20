@@ -1,18 +1,16 @@
-use super::{Finder, FinderError};
+use super::Finder;
 
 pub struct YourDictionary {
     word: String,
 }
 
-impl YourDictionary {
-    pub fn new_query(word: &str) -> Self {
+impl Finder for YourDictionary {
+    fn new_query(word: &str) -> Self {
         Self {
             word: word.to_owned(),
         }
     }
-}
 
-impl Finder for YourDictionary {
     fn url(&self) -> String {
         format!(
             "https://thesaurus.yourdictionary.com/{}",

@@ -1,18 +1,16 @@
-use super::{Finder, FinderError};
+use super::Finder;
 
 pub struct MerriamWebster {
     word: String,
 }
 
-impl MerriamWebster {
-    pub fn new_query(word: &str) -> Self {
+impl Finder for MerriamWebster {
+    fn new_query(word: &str) -> Self {
         Self {
             word: word.to_owned(),
         }
     }
-}
 
-impl Finder for MerriamWebster {
     fn url(&self) -> String {
         format!(
             "https://www.merriam-webster.com/thesaurus/{}",

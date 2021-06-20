@@ -4,10 +4,11 @@ mod counter;
 mod logger;
 mod synonym;
 
-use std::thread::JoinHandle;
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::slice::Iter;
+use std::thread::JoinHandle;
 
 use std::thread;
 
@@ -39,15 +40,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log.debug("Reading file".to_string());
 
     let words: Vec<String> = buffered.lines().flatten().collect();
-    let thesaurus_queries = words.into_iter().map(|word| Thesaurus::new_query(&word));
+    let thesaurus_queries = words.iter().map(create_query::<Thesaurus>);
+    let merriam_queries = words.iter().map(create_query::<MerriamWebster>);
+    let your_dict_queries = words.iter().map(create_query::<YourDictionary>);
 
-    let handles: Vec<JoinHandle<_>> = thesaurus_queries.map(|query| {
-        thread::spawn(move || {
-            query.find_synonyms()
-        })
-    }).collect();
+    let all_queries = thesaurus_queries.chain(merriam_queries).chain(your_dict_queries);
 
-    let results = handles.into_iter().map(|handle| {handle.join()});
+    let handles: Vec<JoinHandle<_>> = all_queries
+        .map(|query| thread::spawn(move || query.find_synonyms()))
+        .collect();
+
+    let results = handles.into_iter().map(|handle| handle.join());
 
     let mut counter = Counter::new();
 
@@ -72,4 +75,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log.debug("Finish".to_string());
 
     Ok(())
+}
+
+fn create_query<T: 'static + Finder + Send>(word: &String) -> Box<dyn Finder + Send> {
+    Box::new(T::new_query(&word))
 }
