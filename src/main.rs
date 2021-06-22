@@ -7,7 +7,6 @@ mod synonym;
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::slice::Iter;
 use std::thread::JoinHandle;
 
 use std::thread;
@@ -44,7 +43,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let merriam_queries = words.iter().map(create_query::<MerriamWebster>);
     let your_dict_queries = words.iter().map(create_query::<YourDictionary>);
 
-    let all_queries = thesaurus_queries.chain(merriam_queries).chain(your_dict_queries);
+    let all_queries = thesaurus_queries
+        .chain(merriam_queries)
+        .chain(your_dict_queries);
 
     let handles: Vec<JoinHandle<_>> = all_queries
         .map(|query| thread::spawn(move || query.find_synonyms()))
@@ -57,10 +58,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     results
         .map(|result| {
             if result.is_err() {
-                log.warn(format!(
-                    "Problem getting synonyms from Thesaurus: {:?}",
-                    result
-                ));
+                log.warn(format!("Problem getting synonyms: {:?}", result));
             }
             result
         })

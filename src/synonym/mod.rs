@@ -9,7 +9,7 @@ const APP_USER_AGENT: &str = "curl/7.68.0";
 pub struct FinderError;
 
 impl From<reqwest::Error> for FinderError {
-    fn from(error: reqwest::Error) -> Self {
+    fn from(_error: reqwest::Error) -> Self {
         FinderError
     }
 }
