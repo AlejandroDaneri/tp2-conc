@@ -3,6 +3,8 @@ pub mod thesaurus;
 pub mod yourdictionary;
 use reqwest::blocking;
 
+use crate::logger;
+
 const APP_USER_AGENT: &str = "curl/7.68.0";
 
 #[derive(Debug)]
@@ -22,7 +24,10 @@ pub trait Finder {
     fn parse_body(&self, body: &str) -> Vec<String>;
 
     fn find_synonyms(&self) -> Result<Vec<String>, FinderError> {
+        let log = logger::Logger::new(logger::Level::Debug);
+
         let url = self.url();
+        log.debug(url.clone());
         let client = blocking::Client::builder()
             .user_agent(APP_USER_AGENT)
             .build()?;

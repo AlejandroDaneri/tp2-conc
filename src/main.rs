@@ -9,7 +9,9 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::thread::JoinHandle;
 
+use std::sync::Arc;
 use std::thread;
+use std_semaphore::Semaphore;
 
 use crate::counter::Counter;
 use crate::synonym::merriamwebster::MerriamWebster;
@@ -47,8 +49,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .chain(merriam_queries)
         .chain(your_dict_queries);
 
+    let sem = Arc::new(Semaphore::new(5));
     let handles: Vec<JoinHandle<_>> = all_queries
-        .map(|query| thread::spawn(move || query.find_synonyms()))
+        .map(|query| {
+            let c_sem = sem.clone();
+            c_sem.acquire();
+            thread::spawn(move || {
+                let c_sem = c_sem.clone();
+                let aux = query.find_synonyms();
+                c_sem.release();
+                aux
+            })
+        })
         .collect();
 
     let results = handles.into_iter().map(|handle| handle.join());
