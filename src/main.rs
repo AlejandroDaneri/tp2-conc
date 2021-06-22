@@ -56,9 +56,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             c_sem.acquire();
             thread::spawn(move || {
                 let c_sem = c_sem.clone();
-                let aux = query.find_synonyms();
+                let result = query.find_synonyms();
                 c_sem.release();
-                aux
+                result
             })
         })
         .collect();
