@@ -27,7 +27,7 @@ pub trait Finder {
         let log = logger::Logger::new(logger::Level::Debug);
 
         let url = self.url();
-        log.debug(format!("Making request to {:?}", url.clone()));
+        log.debug(format!("Making request to {:?}", url));
         let client = blocking::Client::builder()
             .user_agent(APP_USER_AGENT)
             .build()?;
