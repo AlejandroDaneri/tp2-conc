@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Counter {
     count: HashMap<String, i32>,
 }
