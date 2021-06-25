@@ -9,6 +9,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use std::sync::Arc;
+use std::thread;
 use std_semaphore::Semaphore;
 
 use crate::counter::Counter;
@@ -36,33 +37,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log.debug("Reading file".to_string());
 
     let words: Vec<String> = buffered.lines().flatten().collect();
-    let sem = Arc::new(Semaphore::new(5));
+    let sem = Arc::new(Semaphore::new(2));
+    let a_log = Arc::new(log);
 
+    let mut word_handles = Vec::new();
     for word in words {
-        let mut handles = Vec::new();
+        let c_sem = sem.clone();
+        let c_log = a_log.clone();
+        word_handles.push(thread::spawn(move || {
+            let mut handles = Vec::new();
 
-        search_word(sem.clone(), word, &mut handles);
+            search_word(c_sem.clone(), word, &mut handles);
 
-        //TODO: implementar de otra manera para que el join no trabe los requests
-        let results = handles.into_iter().map(|handle| handle.join());
-        let mut counter = Counter::new();
+            let results = handles.into_iter().map(|handle| handle.join());
+            let mut counter = Counter::new();
 
-        results
-            .map(|result| {
-                if result.is_err() {
-                    log.warn(format!("Problem getting synonyms: {:?}", result));
-                }
-                result
-            })
-            .flatten()
-            .flatten()
-            .for_each(|syn_list| {
-                counter.count(&syn_list);
-            });
+            results
+                .map(|result| {
+                    if result.is_err() {
+                        c_log.warn(format!("Problem getting synonyms: {:?}", result));
+                    }
+                    result
+                })
+                .flatten()
+                .flatten()
+                .for_each(|syn_list| {
+                    counter.count(&syn_list);
+                });
 
-        log.info(format!("COUNT : {:?}", counter.get_counter()));
+            c_log.info(format!("COUNT : {:?}", counter.get_counter()));
+        }));
     }
-    log.debug("Finish".to_string());
+    for thread in word_handles {
+        thread.join();
+    }
+    a_log.debug("Finish".to_string());
 
     Ok(())
 }
