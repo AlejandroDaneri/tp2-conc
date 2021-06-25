@@ -16,13 +16,12 @@ use crate::counter::Counter;
 use crate::synonym::searcher::search_word;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let log = logger::Logger::new(logger::Level::Debug);
+    let log = Arc::new(logger::Logger::new(logger::Level::Debug));
     log.debug("Configure log".to_string());
 
     let args: Vec<String> = env::args().collect();
 
     if args.len() <= 1 {
-        println!("Missing path arg");
         log.error("Missing path arg".to_string());
         return Ok(());
     }
@@ -38,12 +37,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let words: Vec<String> = buffered.lines().flatten().collect();
     let sem = Arc::new(Semaphore::new(2));
-    let a_log = Arc::new(log);
 
     let mut word_handles = Vec::new();
     for word in words {
         let c_sem = sem.clone();
-        let c_log = a_log.clone();
+        let c_log = log.clone();
         word_handles.push(thread::spawn(move || {
             let mut handles = Vec::new();
 
@@ -69,9 +67,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }));
     }
     for thread in word_handles {
-        thread.join();
+        thread
+            .join()
+            .map_err(|err| println!("Word join error {:?}", err))
+            .ok();
     }
-    a_log.debug("Finish".to_string());
+    log.debug("Finish".to_string());
 
     Ok(())
 }
