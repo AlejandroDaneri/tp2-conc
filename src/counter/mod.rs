@@ -1,12 +1,14 @@
 use std::collections::HashMap;
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Counter {
+    word: String,
     count: HashMap<String, i32>,
 }
 
 impl Counter {
-    pub fn new() -> Counter {
+    pub fn new(word: String) -> Counter {
         Counter {
+            word,
             count: HashMap::<String, i32>::new(),
         }
     }
@@ -18,8 +20,8 @@ impl Counter {
         self.count.clone()
     }
 
-    pub fn get_counter(&self) -> HashMap<String, i32> {
-        self.count.clone()
+    pub fn get_counter(&self) -> &Self {
+        self // TODO: mejorar el return para que cumpla con lo pedido
     }
 }
 

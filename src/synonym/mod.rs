@@ -1,4 +1,5 @@
 pub mod merriamwebster;
+pub mod searcher;
 pub mod thesaurus;
 pub mod yourdictionary;
 use reqwest::blocking;
@@ -27,11 +28,12 @@ pub trait Finder {
         let log = logger::Logger::new(logger::Level::Debug);
 
         let url = self.url();
-        log.debug(format!("Making request to {:?}", url.clone()));
+        log.debug(format!("Making request to {:?}", url));
         let client = blocking::Client::builder()
             .user_agent(APP_USER_AGENT)
             .build()?;
         let request = client.get(url).send()?;
+        log.debug(format!("Finish request to {:?}", self.url()));
         let body = request.text()?;
         Ok(self.parse_body(body.as_str()))
     }
