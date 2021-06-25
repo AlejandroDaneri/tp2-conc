@@ -9,13 +9,10 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use std::sync::Arc;
-use std::thread;
 use std_semaphore::Semaphore;
 
 use crate::counter::Counter;
-use crate::synonym::searcher::search;
-
-use crate::synonym::searcher::Provider;
+use crate::synonym::searcher::search_word;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log = logger::Logger::new(logger::Level::Debug);
@@ -44,20 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for word in words {
         let mut handles = Vec::new();
 
-        for provider in [
-            Provider::MerriamWebster,
-            Provider::YourDictionary,
-            Provider::Thesaurus,
-        ]
-        .iter()
-        {
-            let c_sem = sem.clone();
-            let c_word = word.clone();
-            handles.push(thread::spawn(move || {
-                let _guard = c_sem.access();
-                search(&c_word, provider)
-            }));
-        }
+        search_word(sem.clone(), word, &mut handles);
 
         //TODO: implementar de otra manera para que el join no trabe los requests
         let results = handles.into_iter().map(|handle| handle.join());
