@@ -33,6 +33,7 @@ pub trait Finder {
             .user_agent(APP_USER_AGENT)
             .build()?;
         let request = client.get(url).send()?;
+        log.debug(format!("Finish request to {:?}", self.url()));
         let body = request.text()?;
         Ok(self.parse_body(body.as_str()))
     }

@@ -15,6 +15,8 @@ use std_semaphore::Semaphore;
 use crate::counter::Counter;
 use crate::synonym::searcher::search_word;
 
+const MAX_CONCURRENT_REQS: isize = 5;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log = Arc::new(logger::Logger::new(logger::Level::Debug));
     log.debug("Configure log".to_string());
@@ -36,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log.debug("Reading file".to_string());
 
     let words: Vec<String> = buffered.lines().flatten().collect();
-    let sem = Arc::new(Semaphore::new(2));
+    let sem = Arc::new(Semaphore::new(MAX_CONCURRENT_REQS));
 
     let mut word_handles = Vec::new();
     for word in words {
@@ -44,11 +46,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let c_log = log.clone();
         word_handles.push(thread::spawn(move || {
             let mut handles = Vec::new();
-
-            search_word(c_sem.clone(), word, &mut handles);
+            let mut counter = Counter::new(word.clone());
+            search_word(c_sem.clone(), word.clone(), &mut handles);
 
             let results = handles.into_iter().map(|handle| handle.join());
-            let mut counter = Counter::new();
 
             results
                 .map(|result| {
@@ -63,13 +64,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     counter.count(&syn_list);
                 });
 
-            c_log.info(format!("COUNT : {:?}", counter.get_counter()));
+            c_log.info(format!("COUNT: {:?}", counter.get_counter()));
         }));
     }
     for thread in word_handles {
         thread
             .join()
-            .map_err(|err| println!("Word join error {:?}", err))
+            .map_err(|err| log.error(format!("Word join error {:?}", err)))
             .ok();
     }
     log.debug("Finish".to_string());
