@@ -13,10 +13,9 @@ use std::thread;
 use std_semaphore::Semaphore;
 
 use crate::counter::Counter;
-use crate::synonym::merriamwebster::MerriamWebster;
-use crate::synonym::thesaurus::Thesaurus;
-use crate::synonym::yourdictionary::YourDictionary;
-use crate::synonym::Finder;
+use crate::synonym::searcher::search;
+
+use crate::synonym::searcher::Provider;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log = logger::Logger::new(logger::Level::Debug);
@@ -45,26 +44,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for word in words {
         let mut handles = Vec::new();
 
-        let mut c_sem = sem.clone();
-        let mut c_word = word.clone();
-        handles.push(thread::spawn(move || {
-            let _guard = c_sem.access();
-            search::<Thesaurus>(&c_word)
-        }));
+        for provider in [
+            Provider::MerriamWebster,
+            Provider::YourDictionary,
+            Provider::Thesaurus,
+        ]
+        .iter()
+        {
+            let c_sem = sem.clone();
+            let c_word = word.clone();
+            handles.push(thread::spawn(move || {
+                let _guard = c_sem.access();
+                search(&c_word, provider)
+            }));
+        }
 
-        c_sem = sem.clone();
-        c_word = word.clone();
-        handles.push(thread::spawn(move || {
-            let _guard = c_sem.access();
-            search::<MerriamWebster>(&c_word)
-        }));
-
-        c_sem = sem.clone();
-        c_word = word.clone();
-        handles.push(thread::spawn(move || {
-            let _guard = c_sem.access();
-            search::<YourDictionary>(&c_word)
-        }));
         //TODO: implementar de otra manera para que el join no trabe los requests
         let results = handles.into_iter().map(|handle| handle.join());
         let mut counter = Counter::new();
@@ -87,8 +81,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log.debug("Finish".to_string());
 
     Ok(())
-}
-
-fn search<T: 'static + Finder + Send>(word: &str) -> Result<Vec<String>, synonym::FinderError> {
-    Box::new(T::new_query(word)).find_synonyms()
 }

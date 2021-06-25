@@ -1,4 +1,5 @@
 pub mod merriamwebster;
+pub mod searcher;
 pub mod thesaurus;
 pub mod yourdictionary;
 use reqwest::blocking;
