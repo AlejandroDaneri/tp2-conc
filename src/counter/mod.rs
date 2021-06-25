@@ -10,10 +10,15 @@ impl Counter {
             count: HashMap::<String, i32>::new(),
         }
     }
+
     pub fn count(&mut self, words: &[String]) -> HashMap<String, i32> {
         words
             .iter()
             .for_each(|w| *self.count.entry(w.to_string()).or_insert(0) += 1);
+        self.count.clone()
+    }
+
+    pub fn get_counter(&self) -> HashMap<String, i32> {
         self.count.clone()
     }
 }

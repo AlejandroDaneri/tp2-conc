@@ -7,6 +7,11 @@ mod synonym;
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::thread::JoinHandle;
+
+use std::sync::Arc;
+use std::thread;
+use std_semaphore::Semaphore;
 
 use crate::counter::Counter;
 use crate::synonym::merriamwebster::MerriamWebster;
@@ -29,63 +34,59 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let path = args[1].as_str();
 
     log.debug("Opening file".to_string());
-    let f = match File::open(path) {
-        Ok(file) => file,
-        Err(error) => panic!("Problem opening the file: {:?}", error),
-    };
+    let f = File::open(path)?;
 
     let buffered = BufReader::new(f);
 
     log.debug("Reading file".to_string());
-    for line in buffered.lines() {
-        let word = line.unwrap();
-        log.debug(format!("Searching synonyms for {}", word));
 
-        let synonyms_thesaurus = match Thesaurus::new_query(&word).find_synonyms() {
-            Ok(syns) => syns,
-            Err(error) => {
-                log.warn(format!(
-                    "Problem getting synonyms from Thesaurus: {:?}",
-                    error
-                ));
-                continue;
+    let words: Vec<String> = buffered.lines().flatten().collect();
+    let thesaurus_queries = words.iter().map(create_query::<Thesaurus>);
+    let merriam_queries = words.iter().map(create_query::<MerriamWebster>);
+    let your_dict_queries = words.iter().map(create_query::<YourDictionary>);
+
+    let all_queries = thesaurus_queries
+        .chain(merriam_queries)
+        .chain(your_dict_queries);
+
+    let sem = Arc::new(Semaphore::new(5));
+    let handles: Vec<JoinHandle<_>> = all_queries
+        .map(|query| {
+            let c_sem = sem.clone();
+            c_sem.acquire();
+            thread::spawn(move || {
+                let c_sem = c_sem.clone();
+                let result = query.find_synonyms();
+                c_sem.release();
+                result
+            })
+        })
+        .collect();
+
+    let results = handles.into_iter().map(|handle| handle.join());
+
+    let mut counter = Counter::new();
+
+    results
+        .map(|result| {
+            if result.is_err() {
+                log.warn(format!("Problem getting synonyms: {:?}", result));
             }
-        };
+            result
+        })
+        .flatten()
+        .flatten()
+        .for_each(|syn_list| {
+            counter.count(&syn_list);
+        });
 
-        let synonyms_your = match YourDictionary::new_query(&word).find_synonyms() {
-            Ok(syns) => syns,
-            Err(error) => {
-                log.warn(format!(
-                    "Problem getting synonyms from YourDictionary: {:?}",
-                    error
-                ));
-                continue;
-            }
-        };
-
-        let synonyms_merr = match MerriamWebster::new_query(&word).find_synonyms() {
-            Ok(syns) => syns,
-            Err(error) => {
-                log.warn(format!(
-                    "Problem getting synonyms from MerriamWebster: {:?}",
-                    error
-                ));
-                continue;
-            }
-        };
-
-        log.info(format!("Sinonimos thesaurus: {:?}", synonyms_thesaurus));
-        log.info(format!("Sinonimos yourdictionary: {:?}", synonyms_your));
-        log.info(format!("Sinonimos merriamwebster: {:?}", synonyms_merr));
-
-        let mut counter = Counter::new();
-        counter.count(&synonyms_thesaurus);
-        counter.count(&synonyms_merr);
-        let res = counter.count(&synonyms_your);
-        log.info(format!("COUNT : {:?}", res));
-    }
+    log.info(format!("COUNT : {:?}", counter.get_counter()));
 
     log.debug("Finish".to_string());
 
     Ok(())
+}
+
+fn create_query<T: 'static + Finder + Send>(word: &String) -> Box<dyn Finder + Send> {
+    Box::new(T::new_query(&word))
 }

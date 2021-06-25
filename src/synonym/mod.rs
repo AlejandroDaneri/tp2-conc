@@ -1,22 +1,38 @@
+pub mod merriamwebster;
 pub mod thesaurus;
 pub mod yourdictionary;
-pub mod merriamwebster;
 use reqwest::blocking;
+
+use crate::logger;
 
 const APP_USER_AGENT: &str = "curl/7.68.0";
 
-pub trait Finder {
-    fn url(&self) -> String;
-    fn parse_body(&self, body: &str) -> Result<Vec<String>, Box<dyn std::error::Error>>;
+#[derive(Debug)]
+pub struct FinderError;
 
-    fn find_synonyms(&self) -> Result<Vec<String>, Box<dyn std::error::Error>> {
+impl From<reqwest::Error> for FinderError {
+    fn from(_error: reqwest::Error) -> Self {
+        FinderError
+    }
+}
+
+pub trait Finder {
+    fn new_query(word: &str) -> Self
+    where
+        Self: Sized;
+    fn url(&self) -> String;
+    fn parse_body(&self, body: &str) -> Vec<String>;
+
+    fn find_synonyms(&self) -> Result<Vec<String>, FinderError> {
+        let log = logger::Logger::new(logger::Level::Debug);
+
         let url = self.url();
-        println!("Url: {}", url);
+        log.debug(format!("Making request to {:?}", url.clone()));
         let client = blocking::Client::builder()
             .user_agent(APP_USER_AGENT)
             .build()?;
         let request = client.get(url).send()?;
         let body = request.text()?;
-        self.parse_body(body.as_str())
+        Ok(self.parse_body(body.as_str()))
     }
 }
