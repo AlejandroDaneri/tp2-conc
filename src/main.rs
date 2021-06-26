@@ -8,14 +8,8 @@ use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+use crate::synonym::searcher::Searcher;
 use std::sync::Arc;
-use std::thread;
-use std_semaphore::Semaphore;
-
-use crate::counter::Counter;
-use crate::synonym::searcher::search_word;
-
-const MAX_CONCURRENT_REQS: isize = 5;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log = Arc::new(logger::Logger::new(logger::Level::Debug));
@@ -38,41 +32,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     log.debug("Reading file".to_string());
 
     let words: Vec<String> = buffered.lines().flatten().collect();
-    let sem = Arc::new(Semaphore::new(MAX_CONCURRENT_REQS));
 
-    let mut word_handles = Vec::new();
-    for word in words {
-        let c_sem = sem.clone();
-        let c_log = log.clone();
-        word_handles.push(thread::spawn(move || {
-            let mut handles = Vec::new();
-            let mut counter = Counter::new(word.clone());
-            search_word(c_sem.clone(), word.clone(), &mut handles);
+    let earcher = Searcher::new(words.clone());
 
-            let results = handles.into_iter().map(|handle| handle.join());
-
-            results
-                .map(|result| {
-                    if result.is_err() {
-                        c_log.warn(format!("Problem getting synonyms: {:?}", result));
-                    }
-                    result
-                })
-                .flatten()
-                .flatten()
-                .for_each(|syn_list| {
-                    counter.count(&syn_list);
-                });
-
-            c_log.info(format!("COUNT: {:?}", counter.get_counter()));
-        }));
-    }
-    for thread in word_handles {
-        thread
-            .join()
-            .map_err(|err| log.error(format!("Word join error {:?}", err)))
-            .ok();
-    }
+    earcher.searchs();
     log.debug("Finish".to_string());
 
     Ok(())
