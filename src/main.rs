@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let words: Vec<String> = buffered.lines().flatten().collect();
 
-    let earcher = Searcher::new(words.clone());
+    let earcher = Searcher::new(words);
 
     earcher.searchs();
     log.debug("Finish".to_string());

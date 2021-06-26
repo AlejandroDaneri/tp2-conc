@@ -48,14 +48,14 @@ impl Searcher {
 
         let mut word_handles = Vec::new();
         let sem = Arc::new(Semaphore::new(MAX_CONCURRENT_REQS));
-        let c_conds = Arc::new(self.conds.clone());
         for word in self.words.clone() {
             let c_sem = sem.clone();
             let c_log = log.clone();
+            let a = self.conds.clone();
             word_handles.push(thread::spawn(move || {
                 let mut handles = Vec::new();
                 let mut counter = Counter::new(word.clone());
-                search_word(c_sem.clone(), word.clone(), &mut handles, c_conds.clone());
+                search_word(c_sem.clone(), word.clone(), &mut handles, &a);
 
                 let results = handles.into_iter().map(|handle| handle.join());
 
@@ -94,7 +94,7 @@ fn search_word(
     sem: Arc<Semaphore>,
     word: String,
     handles: &mut Vec<thread::JoinHandle<Result<Vec<String>, synonym::FinderError>>>,
-    conds: Vec<Arc<(Mutex<()>, Condvar)>>,
+    conds: &[Arc<(Mutex<()>, Condvar)>],
 ) {
     for provider in [
         Provider::MerriamWebster,
@@ -105,7 +105,7 @@ fn search_word(
     {
         let c_sem = sem.clone();
         let c_word = word.clone();
-        let c_conds = conds.clone();
+        let c_conds = conds.to_owned();
         handles.push(thread::spawn(move || {
             let _guard = c_sem.access();
             match provider {
