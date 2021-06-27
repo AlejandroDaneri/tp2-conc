@@ -44,8 +44,6 @@ impl Handler<WordMessage> for SynonymsActor {
                 let response = promise.await;
                 match response {
                     Ok(res) => {
-                        println!("OK");
-                        println!("{:?}", res);
                         counter.count(&res.unwrap());
                     }
                     Err(err) => println!("{}", format!("{:?}", err)),
