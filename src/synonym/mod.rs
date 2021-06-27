@@ -17,6 +17,14 @@ impl From<reqwest::Error> for FinderError {
     }
 }
 
+impl std::fmt::Display for FinderError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Error en el buscador de sinónimos")
+    }
+}
+
+impl std::error::Error for FinderError {}
+
 pub trait Finder {
     fn new_query(word: &str) -> Self
     where
