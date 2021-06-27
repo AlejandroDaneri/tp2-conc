@@ -16,5 +16,5 @@ pub struct DictMessage {
 }
 
 impl Message for DictMessage {
-    type Result = Result<Vec<String>, ()>;
+    type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 }

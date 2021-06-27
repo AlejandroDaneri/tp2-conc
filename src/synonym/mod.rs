@@ -5,6 +5,23 @@ use reqwest::blocking;
 
 const APP_USER_AGENT: &str = "curl/7.68.0";
 
+#[derive(Debug)]
+pub struct FinderError;
+
+impl From<reqwest::Error> for FinderError {
+    fn from(_error: reqwest::Error) -> Self {
+        FinderError
+    }
+}
+
+impl std::fmt::Display for FinderError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Error en el buscador de sinónimos")
+    }
+}
+
+impl std::error::Error for FinderError {}
+
 pub trait Finder {
     fn url(&self) -> String;
     fn parse_body(&self, body: &str) -> Result<Vec<String>, Box<dyn std::error::Error>>;

@@ -16,7 +16,7 @@ impl Actor for ThesaurusActor {
 
 /// Handler for `WordMessage` message
 impl Handler<DictMessage> for ThesaurusActor {
-    type Result = Result<Vec<String>, ()>;
+    type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: DictMessage, _: &mut Context<Self>) -> Self::Result {
         Ok(vec!["Thesaurus".to_owned(), msg.word])

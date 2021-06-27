@@ -16,7 +16,7 @@ impl Actor for YourDictionaryActor {
 
 /// Handler for `WordMessage` message
 impl Handler<DictMessage> for YourDictionaryActor {
-    type Result = Result<Vec<String>, ()>;
+    type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: DictMessage, _: &mut Context<Self>) -> Self::Result {
         Ok(vec!["YourDictionary".to_owned(), msg.word])
