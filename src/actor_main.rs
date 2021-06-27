@@ -59,9 +59,15 @@ async fn main() {
         let message = WordMessage {
             word: word.to_owned(),
         };
-        let res = addr.send(message).await;
-
-        println!("RESULT: {:?}", res.unwrap());
+        let res = match addr.send(message).await {
+            Ok(counter) => counter,
+            Err(_) => todo!(),
+        };
+        let result = match res {
+            Ok(counter) => counter,
+            Err(_) => todo!(),
+        };
+        println!("RESULT: {:?}", result.print_counter());
     }
     // stop system and exit
     System::current().stop();
