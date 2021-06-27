@@ -19,8 +19,8 @@ impl Finder for MerriamWebster {
     }
 
     fn parse_body(&self, body: &str) -> Vec<String> {
-        let from = body.find("thes-list syn-list").unwrap();
-        let to = body.find("thes-list rel-list").unwrap();
+        let from = body.find("thes-list syn-list").unwrap_or(0);
+        let to = body.find("thes-list rel-list").unwrap_or(0);
         let body = &body[from..to];
         let synonyms = body
             .match_indices("<a class=\"\" href=\"/thesaurus/")
