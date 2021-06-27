@@ -41,8 +41,17 @@ impl Handler<WordMessage> for SynonymsActor {
         Box::pin(async move {
             //let responses = join_all(promises).await?;
             for promise in promises {
-                let response = promise.await.unwrap()?;
-                counter.count(&response);
+                let response = promise.await;
+                match response {
+                    Ok(res) => {
+                        println!("OK");
+                        println!("{:?}", res);
+                        counter.count(&res.unwrap());
+                    }
+                    Err(err) => println!("{}", format!("{:?}", err)),
+                }
+                // println!("{:?}", response);
+                // counter.count(response);
             }
             Ok(counter)
         })

@@ -1,6 +1,6 @@
+pub mod merriamwebster;
 pub mod thesaurus;
 pub mod yourdictionary;
-pub mod merriamwebster;
 use reqwest::blocking;
 
 const APP_USER_AGENT: &str = "curl/7.68.0";
@@ -14,9 +14,14 @@ pub trait Finder {
         println!("Url: {}", url);
         let client = blocking::Client::builder()
             .user_agent(APP_USER_AGENT)
-            .build()?;
-        let request = client.get(url).send()?;
-        let body = request.text()?;
-        self.parse_body(body.as_str())
+            .build();
+        match client {
+            Ok(client) => {
+                let request = client.get(url).send()?;
+                let body = request.text()?;
+                self.parse_body(body.as_str())
+            }
+            Err(_) => todo!(),
+        }
     }
 }
