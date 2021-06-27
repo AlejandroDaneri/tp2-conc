@@ -15,13 +15,10 @@ use counter::Counter;
 async fn main() {
     // start new actor
     let mut synonyms_actor = SynonymsActor::new();
-    let thesaurus = ThesaurusActor::new();
-    let your_dict = YourDictionaryActor::new();
-    //let merriam = MerriamWebsterActor::new();
-    let thes_addr = thesaurus.start();
-    let your_dict_addr = your_dict.start();
-    //let merriam_addr = merriam.start();
-    let merriam_addr = SyncArbiter::start(1, move || { MerriamWebsterActor::new() });
+    let merriam_addr = SyncArbiter::start(1, move || MerriamWebsterActor::new());
+    let your_dict_addr = SyncArbiter::start(1, move || YourDictionaryActor::new());
+    let thes_addr = SyncArbiter::start(1, move || ThesaurusActor::new());
+
     synonyms_actor.add_dictionary_actor(thes_addr.recipient());
     synonyms_actor.add_dictionary_actor(your_dict_addr.recipient());
     synonyms_actor.add_dictionary_actor(merriam_addr.recipient());

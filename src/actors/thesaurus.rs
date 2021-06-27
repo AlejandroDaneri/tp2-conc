@@ -1,5 +1,11 @@
-use crate::DictMessage;
-use actix::prelude::{Actor, Context, Handler};
+use crate::{
+    synonym::{thesaurus::Thesaurus, Finder, FinderError},
+    DictMessage,
+};
+use actix::{
+    prelude::{Actor, Handler},
+    SyncContext,
+};
 
 pub struct ThesaurusActor {}
 
@@ -11,14 +17,18 @@ impl ThesaurusActor {
 
 /// Declare actor and its context
 impl Actor for ThesaurusActor {
-    type Context = Context<Self>;
+    type Context = SyncContext<Self>;
 }
 
 /// Handler for `WordMessage` message
 impl Handler<DictMessage> for ThesaurusActor {
     type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 
-    fn handle(&mut self, msg: DictMessage, _: &mut Context<Self>) -> Self::Result {
-        Ok(vec!["Thesaurus".to_owned(), msg.word])
+    fn handle(&mut self, msg: DictMessage, _: &mut SyncContext<Self>) -> Self::Result {
+        if let Ok(res) = Thesaurus::new_query(&msg.word).find_synonyms() {
+            Ok(res)
+        } else {
+            Err(Box::new(FinderError {}))
+        }
     }
 }
