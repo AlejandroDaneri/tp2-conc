@@ -60,14 +60,11 @@ async fn main() {
             word: word.to_owned(),
         };
         let res = match addr.send(message).await {
-            Ok(counter) => counter,
+            Ok(Ok(counter)) => counter,
             Err(_) => todo!(),
+            Ok(Err(_)) => todo!(),
         };
-        let result = match res {
-            Ok(counter) => counter,
-            Err(_) => todo!(),
-        };
-        println!("RESULT: {:?}", result.print_counter());
+        println!("RESULT: {:?}", res.print_counter());
     }
     // stop system and exit
     System::current().stop();
