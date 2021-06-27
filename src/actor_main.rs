@@ -51,6 +51,7 @@ async fn main() {
     let buffered = BufReader::new(f);
 
     log.debug("Reading file".to_string());
+    let mut promises = Vec::new();
     for line in buffered.lines() {
         let word = line.unwrap();
         log.debug(format!("Searching synonyms for {}", word));
@@ -59,15 +60,16 @@ async fn main() {
         let message = WordMessage {
             word: word.to_owned(),
         };
-        let res = match addr.send(message).await {
-            Ok(counter) => counter,
+        promises.push(addr.send(message))
+    }
+
+    for promise in promises {
+        let response = match promise.await {
+            Ok(Ok(counter)) => counter,
             Err(_) => todo!(),
+            Ok(Err(_)) => todo!(),
         };
-        let result = match res {
-            Ok(counter) => counter,
-            Err(_) => todo!(),
-        };
-        println!("RESULT: {:?}", result.print_counter());
+        println!("RESULT: {:?}", response.print_counter());
     }
     // stop system and exit
     System::current().stop();
