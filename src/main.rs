@@ -65,7 +65,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     counter.count(&syn_list);
                 });
 
-            counter.print_counter()
+            counter.print_counter();
+            println!();
+            println!()
         }));
     }
     for thread in word_handles {
