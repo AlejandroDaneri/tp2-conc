@@ -38,7 +38,7 @@ impl Logger {
         };
         let msg = format!("{:?} {} - {} \n", time, level, msg);
         //print!("{}", msg);
-        self.file.borrow().write(msg.as_bytes()).expect("Couldn’t write to log file");
+        self.file.borrow().write_all(msg.as_bytes()).expect("Couldn’t write to log file");
     }
 
     pub fn new(level: Level) -> Self {
