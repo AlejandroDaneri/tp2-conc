@@ -17,6 +17,7 @@ use crate::synonym::searcher::search_word;
 
 const MAX_CONCURRENT_REQS: isize = 5;
 
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log = Arc::new(logger::Logger::new(logger::Level::Debug));
     log.debug("Configure log".to_string());
@@ -64,7 +65,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     counter.count(&syn_list);
                 });
 
-            c_log.info(format!("COUNT: {:?}", counter.get_counter()));
+            counter.print_counter()
         }));
     }
     for thread in word_handles {
@@ -73,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .map_err(|err| log.error(format!("Word join error {:?}", err)))
             .ok();
     }
-    log.debug("Finish".to_string());
+    log.info("Finish".to_string());
 
     Ok(())
 }
