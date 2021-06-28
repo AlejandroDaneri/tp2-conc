@@ -13,10 +13,10 @@ use super::{
 };
 
 use super::super::synonym;
-const MAX_CONCURRENT_REQS: isize = 2;
+const MAX_CONCURRENT_REQS: isize = 5;
 pub struct Searcher {
     words: Vec<String>,
-    conds: Vec<Arc<(Mutex<()>, Condvar)>>,
+    conds: Vec<Arc<(Mutex<bool>, Condvar, String)>>,
 }
 pub enum Provider {
     Thesaurus,
@@ -25,24 +25,12 @@ pub enum Provider {
 }
 impl Searcher {
     pub fn new(words: Vec<String>) -> Self {
-        Self {
-            words,
-            conds: vec![Arc::new((Mutex::new(()), Condvar::new())); 3],
+        let mut vec: Vec<Arc<(Mutex<bool>, Condvar, String)>> = Vec::new();
+        for i in 0..3 {
+            vec.push(Arc::new((Mutex::new(false), Condvar::new(), i.to_string())))
         }
+        Self { words, conds: vec }
     }
-
-    // pub fn search(
-    //     &self,
-    //     word: &str,
-    //     provider: &Provider,
-    // ) -> Result<Vec<String>, synonym::FinderError> {
-    //     match provider {
-    //         Provider::Thesaurus => _search::<Thesaurus>(&word, self.conds[0]),
-    //         Provider::MerriamWebster => _search::<MerriamWebster>(&word, self.conds[1]),
-    //         Provider::YourDictionary => _search::<YourDictionary>(&word, self.conds[2]),
-    //     }
-    // }
-
     pub fn searchs(&self) {
         let log = Arc::new(logger::Logger::new(logger::Level::Debug));
 
@@ -85,16 +73,16 @@ impl Searcher {
 }
 fn _search<T: 'static + Finder + Send>(
     word: &str,
-    pair: Arc<(Mutex<()>, Condvar)>,
+    pair: Arc<(Mutex<bool>, Condvar, String)>,
 ) -> Result<Vec<String>, synonym::FinderError> {
-    Box::new(T::new_query(word)).find_synonyms()
+    Box::new(T::new_query(word)).find_synonyms(pair)
 }
 
 fn search_word(
     sem: Arc<Semaphore>,
     word: String,
     handles: &mut Vec<thread::JoinHandle<Result<Vec<String>, synonym::FinderError>>>,
-    conds: &[Arc<(Mutex<()>, Condvar)>],
+    conds: &[Arc<(Mutex<bool>, Condvar, String)>],
 ) {
     for provider in [
         Provider::MerriamWebster,
