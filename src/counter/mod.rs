@@ -20,8 +20,14 @@ impl Counter {
         self.count.clone()
     }
 
-    pub fn get_counter(&self) -> &Self {
-        self // TODO: mejorar el return para que cumpla con lo pedido
+    pub fn print_counter(&self) {
+        println!("** {} synonyms **", self.word.to_uppercase());
+        let mut hash_vec: Vec<(&String, &i32)> = self.count.iter().collect();
+        hash_vec.sort_by(|a, b| b.1.cmp(a.1));
+        for (key, value) in hash_vec.iter() {
+            print!("{} ({}) ", key, value);
+        }
+        println!();
     }
 }
 

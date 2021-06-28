@@ -66,7 +66,7 @@ impl Searcher {
                             counter.count(&syn_list);
                         });
 
-                    c_log.info(format!("COUNT: {:?}", counter.get_counter()));
+                    counter.print_counter();
                 })
             })
             .collect::<Vec<JoinHandle<_>>>();
