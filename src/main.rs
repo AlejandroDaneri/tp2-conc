@@ -33,9 +33,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let words: Vec<String> = buffered.lines().flatten().collect();
 
-    let earcher = Searcher::new(words);
+    let searcher = Searcher::new(words);
 
-    earcher.searchs();
+    searcher.searchs();
     log.debug("Finish".to_string());
 
     Ok(())

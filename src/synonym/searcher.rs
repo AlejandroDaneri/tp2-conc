@@ -10,9 +10,8 @@ use crate::counter::Counter;
 use crate::logger;
 
 use super::{
-    Provider,
-    PROVIDERS,
     merriamwebster::MerriamWebster, thesaurus::Thesaurus, yourdictionary::YourDictionary, Finder,
+    Provider, PROVIDERS,
 };
 
 use super::super::synonym;
@@ -27,7 +26,11 @@ impl Searcher {
     pub fn new(words: Vec<String>) -> Self {
         let mut vec: Vec<Arc<(Mutex<bool>, Condvar, String)>> = Vec::new();
         for prov in PROVIDERS.iter() {
-            vec.push(Arc::new((Mutex::new(false), Condvar::new(), prov.to_string())))
+            vec.push(Arc::new((
+                Mutex::new(false),
+                Condvar::new(),
+                prov.to_string(),
+            )))
         }
         Self { words, conds: vec }
     }
@@ -43,10 +46,10 @@ impl Searcher {
             .map(|word| {
                 let c_sem = sem.clone();
                 let c_log = log.clone();
-                let a = self.conds.clone();
+                let providers_conds = self.conds.clone();
                 thread::spawn(move || {
                     let mut counter = Counter::new(word.clone());
-                    let handles = launch_searchers(c_sem.clone(), word.clone(), &a);
+                    let handles = launch_searchers(c_sem.clone(), word.clone(), &providers_conds);
 
                     let results = handles.into_iter().map(|handle| handle.join());
 
@@ -89,19 +92,23 @@ fn launch_searchers(
     conds: &[Arc<(Mutex<bool>, Condvar, String)>],
 ) -> Vec<thread::JoinHandle<Result<Vec<String>, synonym::FinderError>>> {
     PROVIDERS
-    .iter()
-    .map(|provider| {
-        let c_sem = sem.clone();
-        let c_word = word.clone();
-        let c_conds = conds.to_owned();
-        thread::spawn(move || {
-            let _guard = c_sem.access();
-            match provider {
-                Provider::Thesaurus => _search::<Thesaurus>(&c_word, c_conds[0].clone()),
-                Provider::MerriamWebster => _search::<MerriamWebster>(&c_word, c_conds[1].clone()),
-                Provider::YourDictionary => _search::<YourDictionary>(&c_word, c_conds[2].clone()),
-            }
+        .iter()
+        .map(|provider| {
+            let c_sem = sem.clone();
+            let c_word = word.clone();
+            let c_conds = conds.to_owned();
+            thread::spawn(move || {
+                let _guard = c_sem.access();
+                match provider {
+                    Provider::Thesaurus => _search::<Thesaurus>(&c_word, c_conds[0].clone()),
+                    Provider::MerriamWebster => {
+                        _search::<MerriamWebster>(&c_word, c_conds[1].clone())
+                    }
+                    Provider::YourDictionary => {
+                        _search::<YourDictionary>(&c_word, c_conds[2].clone())
+                    }
+                }
+            })
         })
-    })
-    .collect()
+        .collect()
 }
