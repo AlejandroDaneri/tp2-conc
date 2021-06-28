@@ -3,6 +3,7 @@ use std::sync::Condvar;
 use std::sync::Mutex;
 use std::thread;
 use std::thread::JoinHandle;
+use std::time::Duration;
 
 use std_semaphore::Semaphore;
 
@@ -83,7 +84,21 @@ fn _search<T: Finder + Send>(
     word: &str,
     pair: Arc<(Mutex<bool>, Condvar, String)>,
 ) -> Result<Vec<String>, synonym::FinderError> {
-    Box::new(T::new_query(word)).find_synonyms(pair)
+    let log = logger::Logger::new(logger::Level::Debug);
+    let (lock, cvar, str) = &*pair;
+
+    let mut busy = cvar
+        .wait_while(lock.lock().unwrap(), |busy| {
+            log.debug(format!("CVAR {:?}, {:?}", busy, str));
+            *busy
+        })
+        .unwrap();
+    *busy = true;
+    let res = Box::new(T::new_query(word)).find_synonyms();
+    thread::sleep(Duration::from_millis(3000));
+    *busy = false;
+    cvar.notify_all();
+    res
 }
 
 fn launch_searchers(
