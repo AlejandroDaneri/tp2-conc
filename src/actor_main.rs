@@ -16,20 +16,29 @@ use actors::thesaurus::ThesaurusActor;
 use actors::yourdictionary::YourDictionaryActor;
 use counter::Counter;
 
+use crate::actors::messages::AddActor;
+
 #[actix::main]
 async fn main() {
     let log = logger::Logger::new(logger::Level::Debug);
 
-    // start new actor
-    let mut synonyms_actor = SynonymsActor::new();
-    let merriam_addr = SyncArbiter::start(1, MerriamWebsterActor::new);
-    let your_dict_addr = SyncArbiter::start(1, YourDictionaryActor::new);
-    let thes_addr = SyncArbiter::start(1, ThesaurusActor::new);
+    let merriam_addr = MerriamWebsterActor::new().start();
+    let your_dict_addr = YourDictionaryActor::new().start();
+    let thes_addr = ThesaurusActor::new().start();
 
-    synonyms_actor.add_dictionary_actor(thes_addr.recipient());
-    synonyms_actor.add_dictionary_actor(your_dict_addr.recipient());
-    synonyms_actor.add_dictionary_actor(merriam_addr.recipient());
-    let addr = synonyms_actor.start();
+    let synonyms_actor = SyncArbiter::start(2, SynonymsActor::new);
+
+    synonyms_actor.send(AddActor {
+        addr: merriam_addr.recipient(),
+    });
+
+    synonyms_actor.send(AddActor {
+        addr: your_dict_addr.recipient(),
+    });
+
+    synonyms_actor.send(AddActor {
+        addr: thes_addr.recipient(),
+    });
 
     let args: Vec<String> = env::args().collect();
 
@@ -60,7 +69,7 @@ async fn main() {
         let message = WordMessage {
             word: word.to_owned(),
         };
-        promises.push(addr.send(message))
+        promises.push(synonyms_actor.send(message))
     }
 
     for promise in promises {

@@ -1,7 +1,10 @@
-use actix::prelude::{Actor, Context, Handler, Recipient, ResponseFuture};
+use actix::prelude::{Actor, Handler, Recipient, ResponseFuture};
+use actix::SyncContext;
 
 use crate::actors::messages::{DictMessage, WordMessage};
 use crate::Counter;
+
+use super::messages::AddActor;
 
 pub struct SynonymsActor {
     dict_addr_vector: Vec<Recipient<DictMessage>>,
@@ -12,21 +15,24 @@ impl SynonymsActor {
         let dict_addr_vector = vec![];
         Self { dict_addr_vector }
     }
-
-    pub fn add_dictionary_actor(&mut self, actor: Recipient<DictMessage>) {
-        self.dict_addr_vector.push(actor);
-    }
 }
 
 /// Declare actor and its context
 impl Actor for SynonymsActor {
-    type Context = Context<Self>;
+    type Context = SyncContext<Self>;
 }
 
+impl Handler<AddActor> for SynonymsActor {
+    type Result = ();
+
+    fn handle(&mut self, msg: AddActor, _: &mut SyncContext<Self>) -> Self::Result {
+        self.dict_addr_vector.push(msg.addr);
+    }
+}
 /// Handler for `WordMessage` message
 impl Handler<WordMessage> for SynonymsActor {
     type Result = ResponseFuture<Result<Counter, ()>>;
-    fn handle(&mut self, msg: WordMessage, _: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, msg: WordMessage, _: &mut SyncContext<Self>) -> Self::Result {
         let mut counter = Counter::new(msg.word.clone());
         let promises = self
             .dict_addr_vector
@@ -48,8 +54,6 @@ impl Handler<WordMessage> for SynonymsActor {
                     }
                     Err(err) => println!("{}", format!("{:?}", err)),
                 }
-                // println!("{:?}", response);
-                // counter.count(response);
             }
             Ok(counter)
         })

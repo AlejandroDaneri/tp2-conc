@@ -1,5 +1,5 @@
 use crate::Counter;
-use actix::prelude::Message;
+use actix::{prelude::Message, Addr};
 
 /// Main query result
 pub struct WordMessage {
@@ -16,5 +16,14 @@ pub struct DictMessage {
 }
 
 impl Message for DictMessage {
+    type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
+}
+
+/// Query per dictionary
+pub struct AddActor {
+    pub addr: Addr<Actor>, // un dictionary actor aca
+}
+
+impl Message for AddActor {
     type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 }
