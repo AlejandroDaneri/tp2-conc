@@ -62,7 +62,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .flatten()
                 .flatten()
                 .for_each(|syn_list| {
-                    counter.count(&syn_list);
+                    let count_result = counter.count(&syn_list);
+                    c_log.info(format!("Result for {} {:?} ", word, count_result))
                 });
 
             counter.print_counter();
