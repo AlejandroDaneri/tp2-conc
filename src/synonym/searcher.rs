@@ -23,10 +23,12 @@ pub enum Provider {
     YourDictionary,
     MerriamWebster,
 }
+const PROVIDERS: i32 = 3;
+
 impl Searcher {
     pub fn new(words: Vec<String>) -> Self {
         let mut vec: Vec<Arc<(Mutex<bool>, Condvar, String)>> = Vec::new();
-        for i in 0..3 {
+        for i in 0..PROVIDERS {
             vec.push(Arc::new((Mutex::new(false), Condvar::new(), i.to_string())))
         }
         Self { words, conds: vec }
