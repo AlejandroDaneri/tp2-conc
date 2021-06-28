@@ -65,3 +65,21 @@ pub trait Finder {
         Ok(self.parse_body(body.as_str()))
     }
 }
+
+#[derive(Debug)]
+pub enum Provider {
+    Thesaurus,
+    YourDictionary,
+    MerriamWebster,
+}
+const PROVIDERS: [Provider; 3] = [
+    Provider::MerriamWebster,
+    Provider::YourDictionary,
+    Provider::Thesaurus,
+];
+
+impl std::fmt::Display for Provider {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}

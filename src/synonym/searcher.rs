@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::sync::Condvar;
 use std::sync::Mutex;
 use std::thread;
+use std::thread::JoinHandle;
 
 use std_semaphore::Semaphore;
 
@@ -9,6 +10,8 @@ use crate::counter::Counter;
 use crate::logger;
 
 use super::{
+    Provider,
+    PROVIDERS,
     merriamwebster::MerriamWebster, thesaurus::Thesaurus, yourdictionary::YourDictionary, Finder,
 };
 
@@ -18,53 +21,53 @@ pub struct Searcher {
     words: Vec<String>,
     conds: Vec<Arc<(Mutex<bool>, Condvar, String)>>,
 }
-pub enum Provider {
-    Thesaurus,
-    YourDictionary,
-    MerriamWebster,
-}
-const PROVIDERS: i32 = 3;
 
+#[allow(clippy::mutex_atomic)]
 impl Searcher {
     pub fn new(words: Vec<String>) -> Self {
         let mut vec: Vec<Arc<(Mutex<bool>, Condvar, String)>> = Vec::new();
-        for i in 0..PROVIDERS {
-            vec.push(Arc::new((Mutex::new(false), Condvar::new(), i.to_string())))
+        for prov in PROVIDERS.iter() {
+            vec.push(Arc::new((Mutex::new(false), Condvar::new(), prov.to_string())))
         }
         Self { words, conds: vec }
     }
+
     pub fn searchs(&self) {
         let log = Arc::new(logger::Logger::new(logger::Level::Debug));
-
-        let mut word_handles = Vec::new();
         let sem = Arc::new(Semaphore::new(MAX_CONCURRENT_REQS));
-        for word in self.words.clone() {
-            let c_sem = sem.clone();
-            let c_log = log.clone();
-            let a = self.conds.clone();
-            word_handles.push(thread::spawn(move || {
-                let mut handles = Vec::new();
-                let mut counter = Counter::new(word.clone());
-                search_word(c_sem.clone(), word.clone(), &mut handles, &a);
 
-                let results = handles.into_iter().map(|handle| handle.join());
+        let word_handles = self
+            .words
+            .clone()
+            .into_iter()
+            .map(|word| {
+                let c_sem = sem.clone();
+                let c_log = log.clone();
+                let a = self.conds.clone();
+                thread::spawn(move || {
+                    let mut counter = Counter::new(word.clone());
+                    let handles = launch_searchers(c_sem.clone(), word.clone(), &a);
 
-                results
-                    .map(|result| {
-                        if result.is_err() {
-                            c_log.warn(format!("Problem getting synonyms: {:?}", result));
-                        }
-                        result
-                    })
-                    .flatten()
-                    .flatten()
-                    .for_each(|syn_list| {
-                        counter.count(&syn_list);
-                    });
+                    let results = handles.into_iter().map(|handle| handle.join());
 
-                c_log.info(format!("COUNT: {:?}", counter.get_counter()));
-            }));
-        }
+                    results
+                        .map(|result| {
+                            if result.is_err() {
+                                c_log.warn(format!("Problem getting synonyms: {:?}", result));
+                            }
+                            result
+                        })
+                        .flatten()
+                        .flatten()
+                        .for_each(|syn_list| {
+                            counter.count(&syn_list);
+                        });
+
+                    c_log.info(format!("COUNT: {:?}", counter.get_counter()));
+                })
+            })
+            .collect::<Vec<JoinHandle<_>>>();
+
         for thread in word_handles {
             thread
                 .join()
@@ -73,36 +76,32 @@ impl Searcher {
         }
     }
 }
-fn _search<T: 'static + Finder + Send>(
+fn _search<T: Finder + Send>(
     word: &str,
     pair: Arc<(Mutex<bool>, Condvar, String)>,
 ) -> Result<Vec<String>, synonym::FinderError> {
     Box::new(T::new_query(word)).find_synonyms(pair)
 }
 
-fn search_word(
+fn launch_searchers(
     sem: Arc<Semaphore>,
     word: String,
-    handles: &mut Vec<thread::JoinHandle<Result<Vec<String>, synonym::FinderError>>>,
     conds: &[Arc<(Mutex<bool>, Condvar, String)>],
-) {
-    for provider in [
-        Provider::MerriamWebster,
-        Provider::YourDictionary,
-        Provider::Thesaurus,
-    ]
+) -> Vec<thread::JoinHandle<Result<Vec<String>, synonym::FinderError>>> {
+    PROVIDERS
     .iter()
-    {
+    .map(|provider| {
         let c_sem = sem.clone();
         let c_word = word.clone();
         let c_conds = conds.to_owned();
-        handles.push(thread::spawn(move || {
+        thread::spawn(move || {
             let _guard = c_sem.access();
             match provider {
                 Provider::Thesaurus => _search::<Thesaurus>(&c_word, c_conds[0].clone()),
                 Provider::MerriamWebster => _search::<MerriamWebster>(&c_word, c_conds[1].clone()),
                 Provider::YourDictionary => _search::<YourDictionary>(&c_word, c_conds[2].clone()),
             }
-        }));
-    }
+        })
+    })
+    .collect()
 }
