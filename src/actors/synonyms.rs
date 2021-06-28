@@ -2,7 +2,7 @@ use actix::prelude::{Actor, Handler, Recipient, ResponseFuture};
 use actix::SyncContext;
 
 use crate::actors::messages::{DictMessage, WordMessage};
-use crate::Counter;
+use crate::{logger, Counter};
 
 use super::messages::AddActor;
 
@@ -45,14 +45,16 @@ impl Handler<WordMessage> for SynonymsActor {
             })
             .collect::<Vec<_>>();
         Box::pin(async move {
+            let log = logger::Logger::new(logger::Level::Debug);
             //let responses = join_all(promises).await?;
             for promise in promises {
                 let response = promise.await;
                 match response {
-                    Ok(res) => {
-                        counter.count(&res.unwrap());
+                    Ok(Ok(res)) => {
+                        counter.count(&res);
                     }
-                    Err(err) => println!("{}", format!("{:?}", err)),
+                    Ok(Err(err)) => log.error(format!("{:?}", err)), //TODO: mejorar mensaje de error
+                    Err(err) => log.error(format!("{:?}", err)),
                 }
             }
             Ok(counter)

@@ -62,23 +62,27 @@ async fn main() {
     log.debug("Reading file".to_string());
     let mut promises = Vec::new();
     for line in buffered.lines() {
-        let word = line.unwrap();
-        log.debug(format!("Searching synonyms for {}", word));
+        match line {
+            Ok(word) => {
+                log.debug(format!("Searching synonyms for {}", word));
 
-        // send message and get future for result
-        let message = WordMessage {
-            word: word.to_owned(),
+                // send message and get future for result
+                let message = WordMessage {
+                    word: word.to_owned(),
+                };
+                promises.push(addr.send(message))
+            }
+            Err(err) => log.error(format!("{:?}", err)),
         };
-        promises.push(synonyms_actor.send(message))
+        // promises.push(synonyms_actor.send(message))
     }
 
     for promise in promises {
-        let response = match promise.await {
-            Ok(Ok(counter)) => counter,
-            Err(_) => todo!(),
-            Ok(Err(_)) => todo!(),
+        match promise.await {
+            Ok(Ok(counter)) => println!("RESULT: {:?}", counter.print_counter()),
+            Err(err) => log.error(format!("Mailbox Promise Error: {:?}", err)),
+            Ok(Err(err)) => log.error(format!("{:?}", err)),
         };
-        println!("RESULT: {:?}", response.print_counter());
     }
     // stop system and exit
     System::current().stop();
