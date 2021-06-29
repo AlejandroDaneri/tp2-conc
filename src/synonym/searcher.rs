@@ -17,8 +17,6 @@ use super::{
 };
 
 use super::super::synonym;
-const MAX_CONCURRENT_REQS: isize = 5;
-const COOLDOWN_TIME: u64 = 3;
 
 pub struct Searcher {
     words: Vec<String>,
@@ -39,9 +37,9 @@ impl Searcher {
         Self { words, conds: vec }
     }
 
-    pub fn searchs(&self) {
+    pub fn searchs(&self, page_cooldown: u64, max_conc_reqs: isize) {
         let log = Arc::new(logger::Logger::new(logger::Level::Debug));
-        let sem = Arc::new(Semaphore::new(MAX_CONCURRENT_REQS));
+        let sem = Arc::new(Semaphore::new(max_conc_reqs));
 
         let thes_last_time = Arc::new(Mutex::new(SystemTime::UNIX_EPOCH));
         let your_dict_last_time = Arc::new(Mutex::new(SystemTime::UNIX_EPOCH));
@@ -74,16 +72,19 @@ impl Searcher {
                                     &c_word,
                                     c_conds[0].clone(),
                                     &mut c_thes_last_time,
+                                    page_cooldown,
                                 ),
                                 Provider::MerriamWebster => _search::<MerriamWebster>(
                                     &c_word,
                                     c_conds[1].clone(),
                                     &mut c_merriam_last_time,
+                                    page_cooldown,
                                 ),
                                 Provider::YourDictionary => _search::<YourDictionary>(
                                     &c_word,
                                     c_conds[2].clone(),
                                     &mut c_your_dict_last_time,
+                                    page_cooldown,
                                 ),
                             }
                         })
@@ -122,6 +123,7 @@ fn _search<T: Finder + Send>(
     word: &str,
     pair: Arc<(Mutex<bool>, Condvar, String)>,
     last_search_time: &mut Arc<Mutex<SystemTime>>,
+    page_cooldown: u64,
 ) -> Result<Vec<String>, synonym::FinderError> {
     let log = logger::Logger::new(logger::Level::Debug);
     let (lock, cvar, str) = &*pair;
@@ -145,9 +147,9 @@ fn _search<T: Finder + Send>(
         _ => unreachable!(),
     };
     *last_time = now;
-    if duration.as_secs() < COOLDOWN_TIME {
-        log.debug(format!("Waiting {:?}", COOLDOWN_TIME - duration.as_secs()));
-        thread::sleep(Duration::from_secs(COOLDOWN_TIME - duration.as_secs()));
+    if duration.as_secs() < page_cooldown {
+        log.debug(format!("Waiting {:?}", page_cooldown - duration.as_secs()));
+        thread::sleep(Duration::from_secs(page_cooldown - duration.as_secs()));
     }
     *busy = false;
     cvar.notify_all();
