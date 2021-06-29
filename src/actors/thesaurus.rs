@@ -1,6 +1,6 @@
 use crate::{
     synonym::{thesaurus::Thesaurus, Finder, FinderError},
-    DictMessage,
+    actors::messages::DictMessage,
 };
 use actix::{
     prelude::{Actor, Handler},
@@ -12,6 +12,12 @@ pub struct ThesaurusActor {}
 impl ThesaurusActor {
     pub fn new() -> Self {
         Self {}
+    }
+}
+
+impl Default for ThesaurusActor {
+    fn default() -> Self {
+        ThesaurusActor::new()
     }
 }
 

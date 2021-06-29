@@ -1,7 +1,7 @@
 mod actors;
 mod counter;
 mod logger;
-mod synonym;
+pub mod synonym;
 
 use actix::prelude::*;
 
@@ -10,15 +10,17 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use actors::merriamwebster::MerriamWebsterActor;
-use actors::messages::{DictMessage, WordMessage};
+use actors::messages::WordMessage;
 use actors::synonyms::SynonymsActor;
 use actors::thesaurus::ThesaurusActor;
 use actors::yourdictionary::YourDictionaryActor;
-use counter::Counter;
+
 
 #[actix::main]
 async fn main() {
     let log = logger::Logger::new(logger::Level::Debug);
+
+    log.info("Search starting with actors...".to_string());
 
     // start new actor
     let mut synonyms_actor = SynonymsActor::new();

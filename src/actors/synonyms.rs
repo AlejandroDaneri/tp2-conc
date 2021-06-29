@@ -1,7 +1,7 @@
 use actix::prelude::{Actor, Context, Handler, Recipient, ResponseFuture};
 
 use crate::actors::messages::{DictMessage, WordMessage};
-use crate::{logger, Counter};
+use crate::{logger, counter::Counter};
 
 pub struct SynonymsActor {
     dict_addr_vector: Vec<Recipient<DictMessage>>,
@@ -15,6 +15,12 @@ impl SynonymsActor {
 
     pub fn add_dictionary_actor(&mut self, actor: Recipient<DictMessage>) {
         self.dict_addr_vector.push(actor);
+    }
+}
+
+impl Default for SynonymsActor {
+    fn default() -> Self {
+        SynonymsActor::new()
     }
 }
 

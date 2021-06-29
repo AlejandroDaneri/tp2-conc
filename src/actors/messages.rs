@@ -1,4 +1,4 @@
-use crate::Counter;
+use crate::counter::Counter;
 use actix::prelude::Message;
 
 /// Main query result

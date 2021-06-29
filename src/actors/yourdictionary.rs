@@ -1,6 +1,6 @@
 use crate::{
     synonym::{yourdictionary::YourDictionary, Finder, FinderError},
-    DictMessage,
+    actors::messages::DictMessage,
 };
 use actix::{
     prelude::{Actor, Handler},
@@ -12,6 +12,12 @@ pub struct YourDictionaryActor {}
 impl YourDictionaryActor {
     pub fn new() -> Self {
         Self {}
+    }
+}
+
+impl Default for YourDictionaryActor {
+    fn default() -> Self {
+        YourDictionaryActor::new()
     }
 }
 

@@ -2,11 +2,6 @@ pub mod merriamwebster;
 pub mod searcher;
 pub mod thesaurus;
 pub mod yourdictionary;
-use std::{
-    sync::{Arc, Condvar, Mutex},
-    thread,
-    time::Duration,
-};
 
 use reqwest::blocking;
 

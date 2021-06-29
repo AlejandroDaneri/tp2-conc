@@ -1,6 +1,6 @@
 use crate::{
     synonym::{merriamwebster::MerriamWebster, Finder, FinderError},
-    DictMessage
+    actors::messages::DictMessage
 };
 use actix::prelude::{Actor, Handler};
 use actix::SyncContext;
@@ -16,6 +16,12 @@ impl MerriamWebsterActor {
 /// Declare actor and its context
 impl Actor for MerriamWebsterActor {
     type Context = SyncContext<Self>;
+}
+
+impl Default for MerriamWebsterActor {
+    fn default() -> Self {
+        MerriamWebsterActor::new()
+    }
 }
 
 /// Handler for `WordMessage` message

@@ -14,6 +14,7 @@ use std::sync::Arc;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log = Arc::new(logger::Logger::new(logger::Level::Debug));
     log.debug("Configure log".to_string());
+    log.info("Search starting...".to_string());
 
     let args: Vec<String> = env::args().collect();
 
