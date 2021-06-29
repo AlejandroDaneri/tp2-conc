@@ -3,7 +3,7 @@ use std::sync::Condvar;
 use std::sync::Mutex;
 use std::thread;
 use std::thread::JoinHandle;
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use std_semaphore::Semaphore;
 
@@ -17,6 +17,8 @@ use super::{
 
 use super::super::synonym;
 const MAX_CONCURRENT_REQS: isize = 5;
+const COOLDOWN_TIME: u64 = 3;
+
 pub struct Searcher {
     words: Vec<String>,
     conds: Vec<Arc<(Mutex<bool>, Condvar, String)>>,
@@ -30,7 +32,7 @@ impl Searcher {
             vec.push(Arc::new((
                 Mutex::new(false),
                 Condvar::new(),
-                prov.to_string(),
+                prov.to_string()
             )))
         }
         Self { words, conds: vec }
@@ -40,6 +42,10 @@ impl Searcher {
         let log = Arc::new(logger::Logger::new(logger::Level::Debug));
         let sem = Arc::new(Semaphore::new(MAX_CONCURRENT_REQS));
 
+        let thes_last_time = Arc::new(Mutex::new(SystemTime::UNIX_EPOCH));
+        let your_dict_last_time = Arc::new(Mutex::new(SystemTime::UNIX_EPOCH));
+        let merriam_last_time = Arc::new(Mutex::new(SystemTime::UNIX_EPOCH));
+    
         let word_handles = self
             .words
             .clone()
@@ -48,9 +54,34 @@ impl Searcher {
                 let c_sem = sem.clone();
                 let c_log = log.clone();
                 let providers_conds = self.conds.clone();
+                let c_thes_last_time = thes_last_time.clone();
+                let c_your_dict_last_time = your_dict_last_time.clone();
+                let c_merriam_last_time = merriam_last_time.clone();
                 thread::spawn(move || {
                     let mut counter = Counter::new(word.clone());
-                    let handles = launch_searchers(c_sem.clone(), word.clone(), &providers_conds);
+                    let handles = 
+                        PROVIDERS.iter()
+                        .map(|provider| {
+                            let mut c_thes_last_time = c_thes_last_time.clone();
+                            let mut c_your_dict_last_time = c_your_dict_last_time.clone();
+                            let mut c_merriam_last_time = c_merriam_last_time.clone();
+                            let c_sem = c_sem.clone();
+                            let c_word = word.clone();
+                            let c_conds = providers_conds.to_owned();
+                            thread::spawn(move || {
+                                let _guard = c_sem.access();
+                                match provider {
+                                    Provider::Thesaurus => _search::<Thesaurus>(&c_word, c_conds[0].clone(), &mut c_thes_last_time),
+                                    Provider::MerriamWebster => {
+                                        _search::<MerriamWebster>(&c_word, c_conds[1].clone(), &mut c_merriam_last_time)
+                                    }
+                                    Provider::YourDictionary => {
+                                        _search::<YourDictionary>(&c_word, c_conds[2].clone(), &mut c_your_dict_last_time)
+                                    }
+                                }
+                            })
+                        })
+                        .collect::<Vec<JoinHandle<_>>>();
 
                     let results = handles.into_iter().map(|handle| handle.join());
 
@@ -83,9 +114,12 @@ impl Searcher {
 fn _search<T: Finder + Send>(
     word: &str,
     pair: Arc<(Mutex<bool>, Condvar, String)>,
+    last_search_time: &mut Arc<Mutex<SystemTime>>
 ) -> Result<Vec<String>, synonym::FinderError> {
     let log = logger::Logger::new(logger::Level::Debug);
     let (lock, cvar, str) = &*pair;
+    let now = SystemTime::now();
+    log.debug(format!("[{:?} last search {:?}: {:?}", now, str, last_search_time));
 
     let mut busy = cvar
         .wait_while(lock.lock().unwrap(), |busy| {
@@ -94,36 +128,15 @@ fn _search<T: Finder + Send>(
         })
         .unwrap();
     *busy = true;
+    let mut last_time = last_search_time.lock().unwrap();
     let res = Box::new(T::new_query(word)).find_synonyms();
-    thread::sleep(Duration::from_millis(3000));
+    let duration = now.duration_since(*last_time).unwrap();
+    *last_time = now;
+    println!("Duration {:?}", duration.as_secs());
+    if duration.as_secs() < COOLDOWN_TIME {
+        thread::sleep(Duration::from_secs(COOLDOWN_TIME - duration.as_secs()));
+    }
     *busy = false;
     cvar.notify_all();
     res
-}
-
-fn launch_searchers(
-    sem: Arc<Semaphore>,
-    word: String,
-    conds: &[Arc<(Mutex<bool>, Condvar, String)>],
-) -> Vec<thread::JoinHandle<Result<Vec<String>, synonym::FinderError>>> {
-    PROVIDERS
-        .iter()
-        .map(|provider| {
-            let c_sem = sem.clone();
-            let c_word = word.clone();
-            let c_conds = conds.to_owned();
-            thread::spawn(move || {
-                let _guard = c_sem.access();
-                match provider {
-                    Provider::Thesaurus => _search::<Thesaurus>(&c_word, c_conds[0].clone()),
-                    Provider::MerriamWebster => {
-                        _search::<MerriamWebster>(&c_word, c_conds[1].clone())
-                    }
-                    Provider::YourDictionary => {
-                        _search::<YourDictionary>(&c_word, c_conds[2].clone())
-                    }
-                }
-            })
-        })
-        .collect()
 }
