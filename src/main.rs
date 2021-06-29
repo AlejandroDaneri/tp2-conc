@@ -13,7 +13,6 @@ use std::sync::Arc;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log = Arc::new(logger::Logger::new(logger::Level::Debug));
-    log.debug("Configure log".to_string());
     log.info("Search starting...".to_string());
 
     let args: Vec<String> = env::args().collect();
@@ -37,7 +36,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let searcher = Searcher::new(words);
 
     searcher.searchs();
-    log.debug("Finish".to_string());
+    log.info("Finish".to_string());
 
     Ok(())
 }

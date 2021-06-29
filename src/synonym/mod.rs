@@ -38,21 +38,14 @@ pub trait Finder {
 
         let url = self.url();
 
-        println!("[find_syn] waiting to {:?}", url);
-        //esperar hasta que busy sea false
-
-        log.debug(format!("Making request to {:?}", url));
+        log.info(format!("Making request to {:?}", url));
 
         let client = blocking::Client::builder()
             .user_agent(APP_USER_AGENT)
             .build()?;
         let request = client.get(url).send()?;
 
-        // log.debug(format!("sleep  {:?}", url));
-
-        // log.debug(format!(" wake up {:?}", url));
-
-        log.debug(format!("Finish request to {:?}", self.url()));
+        log.info(format!("Finish request to {:?}", self.url()));
         let body = request.text()?;
         Ok(self.parse_body(body.as_str()))
     }

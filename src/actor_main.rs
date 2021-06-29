@@ -15,7 +15,6 @@ use actors::synonyms::SynonymsActor;
 use actors::thesaurus::ThesaurusActor;
 use actors::yourdictionary::YourDictionaryActor;
 
-
 #[actix::main]
 async fn main() {
     let log = logger::Logger::new(logger::Level::Debug);
@@ -76,6 +75,7 @@ async fn main() {
             Ok(Err(err)) => log.error(format!("{:?}", err)),
         };
     }
+    log.info("Finish".to_string());
     // stop system and exit
     System::current().stop();
 }
