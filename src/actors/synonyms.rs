@@ -42,6 +42,7 @@ impl Handler<WordMessage> for SynonymsActor {
             .map(|recipient| {
                 let message = DictMessage {
                     word: msg.word.clone(),
+                    page_cooldown: msg.page_cooldown
                 };
                 recipient.send(message)
             })

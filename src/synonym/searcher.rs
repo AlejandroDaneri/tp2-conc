@@ -125,7 +125,7 @@ impl Searcher {
     }
 }
 /// Hace la busqueda sobre una pagina en especifico
-fn _search<T: Finder + Send>(
+fn _search<FinderT: Finder + Send>(
     word: &str,
     pair: Arc<(Mutex<bool>, Condvar, String)>,
     last_search_time: &mut Arc<Mutex<SystemTime>>,
@@ -147,7 +147,7 @@ fn _search<T: Finder + Send>(
         .map_err(|_| FinderError)?;
     *busy = true;
     let mut last_time = last_search_time.lock().map_err(|_| FinderError)?;
-    let res = Box::new(T::new_query(word)).find_synonyms();
+    let res = Box::new(FinderT::new_query(word)).find_synonyms();
     let duration = match now.duration_since(*last_time) {
         Ok(duration) => duration,
         _ => unreachable!(),
