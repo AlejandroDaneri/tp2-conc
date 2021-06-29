@@ -1,7 +1,7 @@
 use actix::prelude::{Actor, Context, Handler, Recipient, ResponseFuture};
 
 use crate::actors::messages::{DictMessage, WordMessage};
-use crate::{logger, counter::Counter};
+use crate::{counter::Counter, logger};
 
 pub struct SynonymsActor {
     dict_addr_vector: Vec<Recipient<DictMessage>>,

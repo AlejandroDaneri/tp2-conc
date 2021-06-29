@@ -1,6 +1,6 @@
 use crate::{
+    actors::messages::DictMessage,
     synonym::{merriamwebster::MerriamWebster, Finder, FinderError},
-    actors::messages::DictMessage
 };
 use actix::prelude::{Actor, Handler};
 use actix::SyncContext;

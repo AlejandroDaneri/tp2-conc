@@ -1,6 +1,6 @@
 use crate::{
-    synonym::{yourdictionary::YourDictionary, Finder, FinderError},
     actors::messages::DictMessage,
+    synonym::{yourdictionary::YourDictionary, Finder, FinderError},
 };
 use actix::{
     prelude::{Actor, Handler},

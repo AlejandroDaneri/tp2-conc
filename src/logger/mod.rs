@@ -1,9 +1,9 @@
+use std::borrow::Borrow;
 use std::cmp::Ordering;
-use std::time::SystemTime;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::Path;
-use std::borrow::Borrow;
+use std::time::SystemTime;
 
 #[derive(Copy, Clone)]
 pub enum Level {
@@ -38,18 +38,17 @@ impl Logger {
         };
         let msg = format!("{:?} {} - {} \n", time, level, msg);
         //print!("{}", msg);
-        self.file.borrow().write_all(msg.as_bytes()).expect("Couldn’t write to log file");
+        self.file
+            .borrow()
+            .write_all(msg.as_bytes())
+            .expect("Couldn’t write to log file");
     }
 
     pub fn new(level: Level) -> Self {
-
         let path = Path::new("app.log");
         let display = path.display();
 
-        let file = match OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path) {
+        let file = match OpenOptions::new().create(true).append(true).open(path) {
             Err(why) => panic!("couldn't create {}: {}", display, why),
             Ok(file) => file,
         };

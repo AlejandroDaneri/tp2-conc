@@ -1,6 +1,6 @@
 use crate::{
-    synonym::{thesaurus::Thesaurus, Finder, FinderError},
     actors::messages::DictMessage,
+    synonym::{thesaurus::Thesaurus, Finder, FinderError},
 };
 use actix::{
     prelude::{Actor, Handler},
