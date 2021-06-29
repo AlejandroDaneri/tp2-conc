@@ -6,8 +6,8 @@ pub struct Counter {
 }
 
 impl Counter {
-    pub fn new(word: String) -> Counter {
-        Counter {
+    pub fn new(word: String) -> Self {
+        Self {
             word,
             count: HashMap::<String, i32>::new(),
         }
@@ -27,6 +27,7 @@ impl Counter {
         for (key, value) in hash_vec.iter() {
             print!("{} ({}) ", key, value);
         }
+        println!();
     }
 }
 
