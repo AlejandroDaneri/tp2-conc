@@ -1,3 +1,5 @@
+//! Modulo encargado de la busqueda sobre la pagina https://thesaurus.yourdictionary.com/
+
 use crate::{
     actors::messages::DictMessage,
     synonym::{yourdictionary::YourDictionary, Finder, FinderError},
@@ -7,9 +9,11 @@ use actix::{
     SyncContext,
 };
 
+/// Actor encargado de la busqueda sobre la pagina https://thesaurus.yourdictionary.com/
 pub struct YourDictionaryActor {}
 
 impl YourDictionaryActor {
+    /// Genera un YourDictionaryActor
     pub fn new() -> Self {
         Self {}
     }

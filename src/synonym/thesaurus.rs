@@ -1,4 +1,6 @@
+//! Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 use super::Finder;
+/// Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 
 pub struct Thesaurus {
     word: String,
@@ -14,7 +16,6 @@ impl Finder for Thesaurus {
     fn url(&self) -> String {
         format!("https://www.thesaurus.com/browse/{}", self.word.as_str())
     }
-
     fn parse_body(&self, body: &str) -> Vec<String> {
         let mut search_l = 0;
         let mut search_r = 0;

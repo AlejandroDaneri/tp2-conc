@@ -1,3 +1,4 @@
+//! Este es el modulo principal para la busqueda de sinonimos mediante el uso de herramientas de concurrencia
 pub mod merriamwebster;
 pub mod searcher;
 pub mod thesaurus;
@@ -10,6 +11,8 @@ use crate::logger;
 const APP_USER_AGENT: &str = "curl/7.68.0";
 
 #[derive(Debug)]
+/// Error que ocurre durante la ejecucion de la busqueda
+
 pub struct FinderError;
 
 impl From<reqwest::Error> for FinderError {
@@ -25,14 +28,21 @@ impl std::fmt::Display for FinderError {
 }
 
 impl std::error::Error for FinderError {}
+/// Trait a implementar en todas las paginas en las cual se quiere hacer una busqueda
 
 pub trait Finder {
+    /// Genera la nueva busqueda
     fn new_query(word: &str) -> Self
     where
         Self: Sized;
+
+    /// Arma la url a utilizar
     fn url(&self) -> String;
+
+    /// Hace el parseo del contenido de la pagina
     fn parse_body(&self, body: &str) -> Vec<String>;
 
+    /// Encuentra los sinonimos en esta pagina
     fn find_synonyms(&self) -> Result<Vec<String>, FinderError> {
         let log = logger::Logger::new(logger::Level::Debug);
 
@@ -52,6 +62,7 @@ pub trait Finder {
 }
 
 #[derive(Debug)]
+/// Contiene todos las paginas a las que se va a buscar
 pub enum Provider {
     Thesaurus,
     YourDictionary,

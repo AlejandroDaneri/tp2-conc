@@ -1,4 +1,7 @@
+//! Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
+
 use super::Finder;
+/// Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 
 pub struct MerriamWebster {
     word: String,
@@ -17,7 +20,7 @@ impl Finder for MerriamWebster {
             self.word.as_str()
         )
     }
-
+    /// Hace el parseo del contenido de la pagina
     fn parse_body(&self, body: &str) -> Vec<String> {
         let from = body.find("thes-list syn-list").unwrap_or(0);
         let to = body.find("thes-list rel-list").unwrap_or(0);

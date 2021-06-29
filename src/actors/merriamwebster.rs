@@ -1,3 +1,5 @@
+//! Modulo encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
+
 use crate::{
     actors::messages::DictMessage,
     synonym::{merriamwebster::MerriamWebster, Finder, FinderError},
@@ -5,9 +7,11 @@ use crate::{
 use actix::prelude::{Actor, Handler};
 use actix::SyncContext;
 
+/// Actor encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 pub struct MerriamWebsterActor {}
 
 impl MerriamWebsterActor {
+    /// Genera un MerriamWebsterActor
     pub fn new() -> Self {
         Self {}
     }

@@ -1,8 +1,10 @@
+//! Modulo encargado de derivar cada busqueda a los diferentes actores de las paginas en concreto
+
 use actix::prelude::{Actor, Context, Handler, Recipient, ResponseFuture};
 
 use crate::actors::messages::{DictMessage, WordMessage};
 use crate::{counter::Counter, logger};
-
+/// Actor encargado de derivar cada busqueda a los diferentes actores de las paginas en concreto
 pub struct SynonymsActor {
     dict_addr_vector: Vec<Recipient<DictMessage>>,
 }

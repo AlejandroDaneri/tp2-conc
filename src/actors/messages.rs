@@ -1,7 +1,9 @@
+//! Modulo con los mensajes que se utilizan para la comunicacion entre actores
+
 use crate::counter::Counter;
 use actix::prelude::Message;
 
-/// Main query result
+/// Mensaje de palaba a buscar sobre una pagina
 pub struct WordMessage {
     pub word: String,
 }
@@ -10,7 +12,7 @@ impl Message for WordMessage {
     type Result = Result<Counter, ()>;
 }
 
-/// Query per dictionary
+/// Mensaje de palabra a buscar
 pub struct DictMessage {
     pub word: String,
 }

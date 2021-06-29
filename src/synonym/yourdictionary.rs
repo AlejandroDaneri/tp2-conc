@@ -1,4 +1,6 @@
+//! Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 use super::Finder;
+/// Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 
 pub struct YourDictionary {
     word: String,
@@ -18,6 +20,7 @@ impl Finder for YourDictionary {
         )
     }
 
+    /// Hace el parseo del contenido de la pagina
     fn parse_body(&self, body: &str) -> Vec<String> {
         let synonyms = body.match_indices("\"synonym-link\"").map(|matched| {
             let synonym_beg = body[matched.0..].find('>').unwrap_or(0) + 1 + matched.0;

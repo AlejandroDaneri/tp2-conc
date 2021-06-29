@@ -1,3 +1,5 @@
+//! Modulo para la coordinacion de las busquedas en las diversas paginas
+
 use std::sync::Arc;
 use std::sync::Condvar;
 use std::sync::Mutex;
@@ -17,6 +19,7 @@ use super::{
 };
 
 use super::super::synonym;
+/// Se utilza para la coordinacion de las busquedas en las diversas paginas
 
 pub struct Searcher {
     words: Vec<String>,
@@ -25,6 +28,7 @@ pub struct Searcher {
 
 #[allow(clippy::mutex_atomic)]
 impl Searcher {
+    /// Crea un nuevo Searcher
     pub fn new(words: Vec<String>) -> Self {
         let mut vec: Vec<Arc<(Mutex<bool>, Condvar, String)>> = Vec::new();
         for prov in PROVIDERS.iter() {
@@ -36,6 +40,7 @@ impl Searcher {
         }
         Self { words, conds: vec }
     }
+    /// Hace la busqueda sobre todas las paginas
 
     pub fn searchs(&self, page_cooldown: u64, max_conc_reqs: isize) {
         let log = Arc::new(logger::Logger::new(logger::Level::Debug));
@@ -119,6 +124,7 @@ impl Searcher {
         }
     }
 }
+/// Hace la busqueda sobre una pagina en especifico
 fn _search<T: Finder + Send>(
     word: &str,
     pair: Arc<(Mutex<bool>, Condvar, String)>,
