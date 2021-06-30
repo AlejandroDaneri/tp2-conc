@@ -1,5 +1,3 @@
-# Buscador de Sinónimos Rústico
-
 # TP2 - Buscador de Sinónimos Rústico
  
 ## Integrantes
