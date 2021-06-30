@@ -48,7 +48,12 @@ En el módulo `synonym` tenemos el trait `Finder` y el error custom `FinderError
 
 El trait `Finder` implementa el método `find_synonyms`, que ejecuta el request y parsea la respuesta, devolviendo los sinónimos parseados.
 
+![Diagrama de hilos](assets/clases.png)
+
+
 ### Parte A: threads
+
+![Diagrama de hilos](assets/hilos.png)
 
 Para la parte A  tenemos una estructura importante: Searcher.
 
@@ -76,6 +81,8 @@ Esta implementación imitaría bastante a la implementación de actores.
 
 
 ### Parte B: actores
+
+![Diagrama de hilos](assets/actores.png)
 
 Intentamos la solución utilizando *actix* sin utilizar los mecanismos de sincronización standard. Esto trajo algunas complicaciones ya que actix tiene un runtime propio asincrónico, y tenía problemas de compatibilidad con la naturaleza bloqueante de *reqwest*. Además la documentación de actix no era muy completa ya que lo más utilizado es *actix_web*
 
