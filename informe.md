@@ -1,7 +1,6 @@
 # Buscador de Sinónimos Rústico
 
 # TP2 - Buscador de Sinónimos Rústico
-+# Buscador de Sinónimos Rústico
  
 ## Integrantes
 **Fecha de entrega:** 29 de junio antes de las 19 hs.
@@ -16,7 +15,8 @@ El programa recibe 3 parámetros de entrada:
 Para ello se realizarán peticiones de varios sitios de Internet que ofrecen este servicio.
  
 - **file**: nombre del archivo que contiene las palabras a buscar
-- **max_conc_reqs**: cantidad máxima de requests HTTP a procesar en forma concurrente para todos los sitios- **page_cooldown**: tiempo mínimo de espera entre dos requests HTTP sucesivos para un mismo sitio
+- **max_conc_reqs**: cantidad máxima de requests HTTP a procesar en forma concurrente para todos los sitios
+- **page_cooldown**: tiempo mínimo de espera entre dos requests HTTP sucesivos para un mismo sitio
 
 ## Requerimientos Funcionales
  
@@ -44,13 +44,13 @@ cargo run --bin sinonimos words.txt 5 2
 ```
 
 
-### Estructuras y Traits utilizados
+## Estructuras y Traits utilizados
 
 En el módulo `synonym` tenemos el trait `Finder` y el error custom `FinderError`. El trait `Finder ` posee la interfaz común a los buscadores de sinónimos. Estos buscadores poseen una URL a la cuál se hace el request HTTP en busca de sinónimos. El método `get_url()` es para obtener la url particular del buscador, y `parse_body()` para extraer los sinónimos de la respuesta.
 
 El trait `Finder` implementa el método `find_synonyms`, que ejecuta el request y parsea la respuesta, devolviendo los sinónimos parseados.
 
-#### Parte A: threads
+### Parte A: threads
 
 Para la parte A  tenemos una estructura importante: Searcher.
 
@@ -77,7 +77,7 @@ Una solución más económica en recursos es utilizar un hilo por proveedor y bu
 Esta implementación imitaría bastante a la implementación de actores.
 
 
-#### Parte B: actores
+### Parte B: actores
 
 Intentamos la solución utilizando *actix* sin utilizar los mecanismos de sincronización standard. Esto trajo algunas complicaciones ya que actix tiene un runtime propio asincrónico, y tenía problemas de compatibilidad con la naturaleza bloqueante de *reqwest*. Además la documentación de actix no era muy completa ya que lo más utilizado es *actix_web*
 
@@ -95,7 +95,7 @@ Para inicializar el actor desde afuera tuvimos dos ideas:
 
 * Crear un método *factory* que pueda ser llamado N veces y genere las instancias del actor. Este último no pudimos implementarlo bien ya que nuestro primer intento fue con lambdas que realizaban movimiento de variables y esto generaba una función que solo podía ser lanzado una vez.
 
-### Conclusión:
+## Conclusión:
 
 La implementación que elegimos con la biblioteca standard tiene mucho estado mutable compartido. Por un lado nos facilitó el cálculo del resultado final, pero por otro lado, al darle tanta concurrencia nos complicó al momento de poner límites de
 concurrencia (como los límites de requests o cooldowns).
