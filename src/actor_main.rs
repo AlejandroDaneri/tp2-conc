@@ -38,18 +38,22 @@ async fn main() -> Result<(), ()> {
     let page_cooldown = match args[2].parse::<u64>() {
         Ok(num) => num,
         Err(err) => {
-            log.error(format!("Error when parsing max_conc_reqs {}", err));
+            log.error(format!("Error when parsing page_cooldown {}", err));
             return Err(());
         }
     };
-
 
     let path = args[1].as_str();
 
     run_search(log, path, page_cooldown, max_conc_reqs).await
 }
 
-async fn run_search(log: logger::Logger, path: &str, page_cooldown: u64, max_conc_reqs: usize) -> Result<(), ()> {
+async fn run_search(
+    log: logger::Logger,
+    path: &str,
+    page_cooldown: u64,
+    max_conc_reqs: usize,
+) -> Result<(), ()> {
     log.info("Search starting with actors...".to_string());
 
     // start new actor
@@ -62,7 +66,6 @@ async fn run_search(log: logger::Logger, path: &str, page_cooldown: u64, max_con
     synonyms_actor.add_dictionary_actor(your_dict_addr.recipient());
     synonyms_actor.add_dictionary_actor(merriam_addr.recipient());
     let addr = synonyms_actor.start();
-
 
     log.debug("Opening file".to_string());
     let f = match File::open(path) {
@@ -82,7 +85,7 @@ async fn run_search(log: logger::Logger, path: &str, page_cooldown: u64, max_con
                 // send message and get future for result
                 let message = WordMessage {
                     word: word.to_owned(),
-                    page_cooldown: page_cooldown
+                    page_cooldown: page_cooldown,
                 };
                 promises.push(addr.send(message))
             }

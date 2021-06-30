@@ -51,8 +51,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let page_cooldown = match args[2].parse::<u64>() {
         Ok(num) => num,
         Err(err) => {
-            log.error(format!("Error when parsing max_conc_reqs {}", err));
-            return Err(Box::new(ArgError("Error parsing max conc reqs")));
+            log.error(format!("Error when parsing page_cooldown {}", err));
+            return Err(Box::new(ArgError("Error parsing page cooldown")));
         }
     };
 

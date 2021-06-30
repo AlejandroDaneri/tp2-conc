@@ -1,16 +1,16 @@
 //! Modulo encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
-use std::time::{Duration, SystemTime};
-use std::thread;
 use crate::{
     actors::messages::DictMessage,
     synonym::{merriamwebster::MerriamWebster, Finder, FinderError},
 };
 use actix::prelude::{Actor, Handler};
 use actix::SyncContext;
+use std::thread;
+use std::time::{Duration, SystemTime};
 
 /// Actor encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 pub struct MerriamWebsterActor {
-    last_search_time: SystemTime
+    last_search_time: SystemTime,
 }
 
 impl MerriamWebsterActor {

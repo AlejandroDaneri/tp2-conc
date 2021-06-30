@@ -1,7 +1,5 @@
 //! Modulo encargado de la busqueda sobre la pagina https://www.thesaurus.com/browse/
 
-use std::time::{Duration, SystemTime};
-use std::thread;
 use crate::{
     actors::messages::DictMessage,
     synonym::{thesaurus::Thesaurus, Finder, FinderError},
@@ -10,11 +8,13 @@ use actix::{
     prelude::{Actor, Handler},
     SyncContext,
 };
+use std::thread;
+use std::time::{Duration, SystemTime};
 
 /// Actor encargado de la busqueda sobre la pagina https://www.thesaurus.com/browse/
 
 pub struct ThesaurusActor {
-    last_search_time: SystemTime
+    last_search_time: SystemTime,
 }
 
 impl ThesaurusActor {
