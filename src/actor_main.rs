@@ -6,7 +6,7 @@ pub mod synonym;
 use actix::prelude::*;
 
 use std::env;
-use std::error::Error;
+
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -85,7 +85,7 @@ async fn run_search(
                 // send message and get future for result
                 let message = WordMessage {
                     word: word.to_owned(),
-                    page_cooldown: page_cooldown,
+                    page_cooldown,
                 };
                 promises.push(addr.send(message))
             }
