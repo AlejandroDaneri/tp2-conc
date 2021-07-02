@@ -1,7 +1,7 @@
 //! Modulo con los mensajes que se utilizan para la comunicacion entre actores
 
 use crate::counter::Counter;
-use actix::prelude::Message;
+use actix::{prelude::Message, Recipient};
 
 /// Mensaje de palaba a buscar sobre una pagina
 pub struct WordMessage {
@@ -21,4 +21,13 @@ pub struct DictMessage {
 
 impl Message for DictMessage {
     type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
+}
+
+/// Mensaje de palabra a buscar
+pub struct AddrMessage {
+    pub addr: Recipient<DictMessage>,
+}
+
+impl Message for AddrMessage {
+    type Result = ();
 }
