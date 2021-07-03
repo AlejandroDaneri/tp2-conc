@@ -22,3 +22,11 @@ pub struct DictMessage {
 impl Message for DictMessage {
     type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 }
+
+pub struct RequestMessage {
+    pub url: String,
+}
+
+impl Message for RequestMessage {
+    type Result = Result<String, Box<dyn std::error::Error + Send>>;
+}

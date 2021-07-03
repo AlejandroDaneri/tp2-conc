@@ -4,11 +4,7 @@ pub mod searcher;
 pub mod thesaurus;
 pub mod yourdictionary;
 
-use reqwest::blocking;
-
-use crate::logger;
-
-const APP_USER_AGENT: &str = "curl/7.68.0";
+use crate::{logger, requester::Requester};
 
 #[derive(Debug)]
 /// Error que ocurre durante la ejecucion de la busqueda
@@ -50,13 +46,12 @@ pub trait Finder {
 
         log.info(format!("Making request to {:?}", url));
 
-        let client = blocking::Client::builder()
-            .user_agent(APP_USER_AGENT)
-            .build()?;
-        let request = client.get(url).send()?;
+        let body = match Requester::make_request(url) {
+            Ok(request) => request,
+            Err(_err) => unreachable!(), //TODO:
+        };
 
         log.info(format!("Finish request to {:?}", self.url()));
-        let body = request.text()?;
         Ok(self.parse_body(body.as_str()))
     }
 }

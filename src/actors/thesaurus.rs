@@ -6,8 +6,9 @@ use crate::{
 };
 use actix::{
     prelude::{Actor, Handler},
-    SyncContext,
+    AsyncContext,
 };
+use actix::{Context, WrapFuture};
 use std::thread;
 use std::time::{Duration, SystemTime};
 
@@ -45,19 +46,15 @@ impl Default for ThesaurusActor {
 
 /// Declare actor and its context
 impl Actor for ThesaurusActor {
-    type Context = SyncContext<Self>;
+    type Context = Context<Self>;
 }
 
 /// Handler for `WordMessage` message
 impl Handler<DictMessage> for ThesaurusActor {
     type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 
-    fn handle(&mut self, msg: DictMessage, _: &mut SyncContext<Self>) -> Self::Result {
-        self.sleep_if_necessary(msg.page_cooldown);
-        if let Ok(res) = Thesaurus::new_query(&msg.word).find_synonyms() {
-            Ok(res)
-        } else {
-            Err(Box::new(FinderError {}))
-        }
+    fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
+        ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
+        self.requester.send(Thesaurus::new_query(&msg.word).url())
     }
 }

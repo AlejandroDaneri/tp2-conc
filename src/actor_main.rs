@@ -1,6 +1,7 @@
 mod actors;
 mod counter;
 mod logger;
+mod requester;
 pub mod synonym;
 
 use actix::prelude::*;
@@ -55,12 +56,21 @@ async fn run_search(
     max_conc_reqs: usize,
 ) -> Result<(), ()> {
     log.info("Search starting with actors...".to_string());
+    let requester_addr = SyncArbiter::start(max_conc_reqs, RequesterActor::new);
+    let merriam_addr = MerriamWebsterActor::new();
+    let your_dict_addr = YourDictionaryActor::new();
+    let thes_addr = ThesaurusActor::new();
+
+    thes_addr.add_requester(requester_addr);
+    your_dict_addr.add_requester(requester_addr);
+    merriam_addr.add_requester(requester_addr);
+
+    merriam_addr.start();
+    your_dict_addr.start();
+    thes_addr.start();
 
     // start new actor
     let mut synonyms_actor = SynonymsActor::new();
-    let merriam_addr = SyncArbiter::start(max_conc_reqs, MerriamWebsterActor::new);
-    let your_dict_addr = SyncArbiter::start(max_conc_reqs, YourDictionaryActor::new);
-    let thes_addr = SyncArbiter::start(max_conc_reqs, ThesaurusActor::new);
 
     synonyms_actor.add_dictionary_actor(thes_addr.recipient());
     synonyms_actor.add_dictionary_actor(your_dict_addr.recipient());
