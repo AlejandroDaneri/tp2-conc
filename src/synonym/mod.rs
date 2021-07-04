@@ -1,4 +1,6 @@
 //! Este es el modulo principal para la busqueda de sinonimos mediante el uso de herramientas de concurrencia
+pub mod balancer;
+pub mod finder_executor;
 pub mod merriamwebster;
 pub mod searcher;
 pub mod thesaurus;
@@ -11,8 +13,13 @@ use crate::logger;
 const APP_USER_AGENT: &str = "curl/7.68.0";
 
 #[derive(Debug)]
-/// Error que ocurre durante la ejecucion de la busqueda
+pub struct QueryResponse {
+    pub word: String,
+    pub synonyms: Vec<String>,
+}
 
+/// Error que ocurre durante la ejecucion de la busqueda
+#[derive(Debug)]
 pub struct FinderError;
 
 impl From<reqwest::Error> for FinderError {
@@ -36,14 +43,16 @@ pub trait Finder {
     where
         Self: Sized;
 
+    fn get_id() -> String;
+
     /// Arma la url a utilizar
     fn url(&self) -> String;
 
     /// Hace el parseo del contenido de la pagina
-    fn parse_body(&self, body: &str) -> Vec<String>;
+    fn parse_body(&self, body: &str) -> QueryResponse;
 
     /// Encuentra los sinonimos en esta pagina
-    fn find_synonyms(&self) -> Result<Vec<String>, FinderError> {
+    fn find_synonyms(&self) -> Result<QueryResponse, FinderError> {
         let log = logger::Logger::new(logger::Level::Debug);
 
         let url = self.url();
@@ -58,24 +67,5 @@ pub trait Finder {
         log.info(format!("Finish request to {:?}", self.url()));
         let body = request.text()?;
         Ok(self.parse_body(body.as_str()))
-    }
-}
-
-#[derive(Debug)]
-/// Contiene todos las paginas a las que se va a buscar
-pub enum Provider {
-    Thesaurus,
-    YourDictionary,
-    MerriamWebster,
-}
-const PROVIDERS: [Provider; 3] = [
-    Provider::MerriamWebster,
-    Provider::YourDictionary,
-    Provider::Thesaurus,
-];
-
-impl std::fmt::Display for Provider {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self)
     }
 }

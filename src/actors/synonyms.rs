@@ -56,7 +56,7 @@ impl Handler<WordMessage> for SynonymsActor {
                 let response = promise.await;
                 match response {
                     Ok(Ok(res)) => {
-                        counter.count(&res);
+                        counter.count(&res.synonyms);
                     }
                     Ok(Err(err)) => log.error(format!("{:?}", err)), //TODO: mejorar mensaje de error
                     Err(err) => log.error(format!("{:?}", err)),

@@ -1,6 +1,7 @@
 //! Modulo con los mensajes que se utilizan para la comunicacion entre actores
 
 use crate::counter::Counter;
+use crate::synonym::QueryResponse;
 use actix::{prelude::Message, Recipient};
 
 /// Mensaje de palaba a buscar sobre una pagina
@@ -20,7 +21,7 @@ pub struct DictMessage {
 }
 
 impl Message for DictMessage {
-    type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
+    type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
 }
 
 /// Mensaje de palabra a buscar

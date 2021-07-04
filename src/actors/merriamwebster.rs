@@ -1,7 +1,7 @@
 //! Modulo encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 use crate::{
     actors::messages::DictMessage,
-    synonym::{merriamwebster::MerriamWebster, Finder, FinderError},
+    synonym::{merriamwebster::MerriamWebster, Finder, FinderError, QueryResponse},
 };
 use actix::{
     prelude::{Actor, Handler},
@@ -51,7 +51,7 @@ impl Default for MerriamWebsterActor {
 
 /// Handler for `WordMessage` message
 impl Handler<DictMessage> for MerriamWebsterActor {
-    type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
+    type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
         self.sleep_if_necessary(msg.page_cooldown, ctx);

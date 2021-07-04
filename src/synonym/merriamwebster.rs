@@ -1,6 +1,6 @@
 //! Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 
-use super::Finder;
+use super::{Finder, QueryResponse};
 /// Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 
 pub struct MerriamWebster {
@@ -14,6 +14,10 @@ impl Finder for MerriamWebster {
         }
     }
 
+    fn get_id() -> String {
+        "MerriamWebster".to_string()
+    }
+
     fn url(&self) -> String {
         format!(
             "https://www.merriam-webster.com/thesaurus/{}",
@@ -21,7 +25,7 @@ impl Finder for MerriamWebster {
         )
     }
     /// Hace el parseo del contenido de la pagina
-    fn parse_body(&self, body: &str) -> Vec<String> {
+    fn parse_body(&self, body: &str) -> QueryResponse {
         let from = body.find("thes-list syn-list").unwrap_or(0);
         let to = body.find("thes-list rel-list").unwrap_or(0);
         let body = &body[from..to];
@@ -32,6 +36,9 @@ impl Finder for MerriamWebster {
                 let synonym_end = body[synonym_beg..].find('<').unwrap_or(0) + synonym_beg;
                 body[synonym_beg..synonym_end].to_owned()
             });
-        synonyms.collect::<Vec<String>>()
+        QueryResponse {
+            word: self.word.clone(),
+            synonyms: synonyms.collect::<Vec<String>>(),
+        }
     }
 }
