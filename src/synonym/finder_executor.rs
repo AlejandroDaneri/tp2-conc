@@ -24,7 +24,7 @@ impl<T: 'static + Finder + Send> FinderExecutor<T> {
         }
     }
 
-    pub fn execute(&self, words: &Vec<String>, balancer_enabled: bool) -> HashMap<String, Counter> {
+    pub fn execute(&self, words: &Vec<String>, balancer_enabled: bool) -> Vec<Counter> {
         let handles;
         if balancer_enabled {
             handles = self.execute_sync_threaded(words)
@@ -40,7 +40,7 @@ impl<T: 'static + Finder + Send> FinderExecutor<T> {
             .map(|query_res| {
                 let mut counter = Counter::new(query_res.word.clone());
                 counter.count(&query_res.synonyms);
-                (query_res.word.clone(), counter)
+                counter
             })
             .collect()
     }
