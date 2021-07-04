@@ -1,5 +1,5 @@
 //! Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
-use super::Finder;
+use super::{Finder, QueryResponse};
 /// Encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 
 pub struct Thesaurus {
@@ -13,10 +13,15 @@ impl Finder for Thesaurus {
         }
     }
 
+    fn get_id() -> String {
+        "Thesaurus".to_string()
+    }
+
     fn url(&self) -> String {
         format!("https://www.thesaurus.com/browse/{}", self.word.as_str())
     }
-    fn parse_body(&self, body: &str) -> Vec<String> {
+
+    fn parse_body(&self, body: &str) -> QueryResponse {
         let mut search_l = 0;
         let mut search_r = 0;
 
@@ -56,6 +61,9 @@ impl Finder for Thesaurus {
             res.push(left2.to_owned())
         }
 
-        res
+        QueryResponse {
+            word: self.word.clone(),
+            synonyms: res,
+        }
     }
 }
