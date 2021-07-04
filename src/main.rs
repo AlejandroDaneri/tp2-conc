@@ -40,7 +40,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let path = args[1].as_str();
 
-    let max_conc_reqs = match args[3].parse::<isize>() {
+    let max_conc_reqs = match args[3].parse::<usize>() {
         Ok(num) => num,
         Err(err) => {
             log.error(format!("Error when parsing max_conc_reqs {}", err));

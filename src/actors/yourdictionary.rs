@@ -2,7 +2,7 @@
 
 use crate::{
     actors::messages::DictMessage,
-    synonym::{yourdictionary::YourDictionary, Finder, FinderError},
+    synonym::{yourdictionary::YourDictionary, Finder, FinderError, QueryResponse},
 };
 use actix::{
     prelude::{Actor, Handler},
@@ -49,7 +49,7 @@ impl Actor for YourDictionaryActor {
 
 /// Handler for `WordMessage` message
 impl Handler<DictMessage> for YourDictionaryActor {
-    type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
+    type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: DictMessage, _: &mut SyncContext<Self>) -> Self::Result {
         self.sleep_if_necessary(msg.page_cooldown);
