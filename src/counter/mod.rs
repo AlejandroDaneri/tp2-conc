@@ -1,9 +1,10 @@
 //! Se encarga de llevar el conteo de las palabras que se les pasa
-
 use std::collections::HashMap;
+use std::fmt;
+
 #[derive(Clone, Debug)]
 pub struct Counter {
-    word: String,
+    pub word: String,
     count: HashMap<String, i32>,
 }
 
@@ -24,15 +25,23 @@ impl Counter {
         self.count.clone()
     }
 
-    /// Muestra los resultados totales hasta el momento
-    pub fn print_counter(&self) {
-        println!("** {} synonyms **", self.word.to_uppercase());
+    pub fn merge(&mut self, other: &Counter) {
+        other
+            .count
+            .iter()
+            .for_each(|(key, value)| *self.count.entry(key.clone()).or_insert(0) += value)
+    }
+}
+
+impl fmt::Display for Counter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "** {} synonyms **", self.word.to_uppercase())?;
         let mut hash_vec: Vec<(&String, &i32)> = self.count.iter().collect();
         hash_vec.sort_by(|a, b| b.1.cmp(a.1));
         for (key, value) in hash_vec.iter() {
-            print!("{} ({}) ", key, value);
+            write!(f, "{} ({}) ", key, value)?;
         }
-        println!();
+        writeln!(f)
     }
 }
 
