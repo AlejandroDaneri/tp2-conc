@@ -11,7 +11,6 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 use actors::merriamwebster::MerriamWebsterActor;
-use actors::messages::AddrMessage;
 use actors::messages::WordMessage;
 use actors::synonyms::SynonymsActor;
 use actors::thesaurus::ThesaurusActor;
@@ -57,26 +56,16 @@ async fn run_search(
 ) -> Result<(), ()> {
     log.info("Search starting with actors...".to_string());
 
-    let synonyms_actor = SyncArbiter::start(max_conc_reqs, SynonymsActor::new);
-    let merriam_addr = MerriamWebsterActor::new().start().recipient();
-    let your_dict_addr = YourDictionaryActor::new().start().recipient();
-    let thes_addr = ThesaurusActor::new().start().recipient();
+    // start new actor
+    let mut synonyms_actor = SynonymsActor::new();
+    let merriam_addr = SyncArbiter::start(max_conc_reqs, MerriamWebsterActor::new);
+    let your_dict_addr = SyncArbiter::start(max_conc_reqs, YourDictionaryActor::new);
+    let thes_addr = SyncArbiter::start(max_conc_reqs, ThesaurusActor::new);
 
-    synonyms_actor
-        .send(AddrMessage { addr: merriam_addr })
-        .await
-        .unwrap();
-    synonyms_actor
-        .send(AddrMessage {
-            addr: your_dict_addr,
-        })
-        .await
-        .unwrap();
-    synonyms_actor
-        .send(AddrMessage { addr: thes_addr })
-        .await
-        .unwrap();
-    // let addr = synonyms_actor.start();
+    synonyms_actor.add_dictionary_actor(thes_addr.recipient());
+    synonyms_actor.add_dictionary_actor(your_dict_addr.recipient());
+    synonyms_actor.add_dictionary_actor(merriam_addr.recipient());
+    let addr = synonyms_actor.start();
 
     log.debug("Opening file".to_string());
     let f = match File::open(path) {
@@ -98,7 +87,7 @@ async fn run_search(
                     word: word.to_owned(),
                     page_cooldown,
                 };
-                promises.push(synonyms_actor.send(message))
+                promises.push(addr.send(message))
             }
             Err(err) => log.error(format!("{:?}", err)),
         };

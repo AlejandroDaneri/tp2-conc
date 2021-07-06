@@ -1,11 +1,9 @@
 //! Modulo encargado de derivar cada busqueda a los diferentes actores de las paginas en concreto
 
-use actix::prelude::{Actor, Handler, Recipient, ResponseFuture, SyncContext};
+use actix::prelude::{Actor, Context, Handler, Recipient, ResponseFuture};
 
 use crate::actors::messages::{DictMessage, WordMessage};
 use crate::{counter::Counter, logger};
-
-use super::messages::AddrMessage;
 /// Actor encargado de derivar cada busqueda a los diferentes actores de las paginas en concreto
 pub struct SynonymsActor {
     dict_addr_vector: Vec<Recipient<DictMessage>>,
@@ -17,9 +15,9 @@ impl SynonymsActor {
         Self { dict_addr_vector }
     }
 
-    // pub fn add_dictionary_actor(&mut self, actor: Recipient<DictMessage>) {
-    //     self.dict_addr_vector.push(actor);
-    // }
+    pub fn add_dictionary_actor(&mut self, actor: Recipient<DictMessage>) {
+        self.dict_addr_vector.push(actor);
+    }
 }
 
 impl Default for SynonymsActor {
@@ -30,13 +28,13 @@ impl Default for SynonymsActor {
 
 /// Declare actor and its context
 impl Actor for SynonymsActor {
-    type Context = SyncContext<Self>;
+    type Context = Context<Self>;
 }
 
 /// Handler for `WordMessage` message
 impl Handler<WordMessage> for SynonymsActor {
     type Result = ResponseFuture<Result<Counter, ()>>;
-    fn handle(&mut self, msg: WordMessage, _: &mut SyncContext<Self>) -> Self::Result {
+    fn handle(&mut self, msg: WordMessage, _: &mut Context<Self>) -> Self::Result {
         let mut counter = Counter::new(msg.word.clone());
         let promises = self
             .dict_addr_vector
@@ -64,13 +62,5 @@ impl Handler<WordMessage> for SynonymsActor {
             }
             Ok(counter)
         })
-    }
-}
-
-/// Handler for `AddrMessage` message
-impl Handler<AddrMessage> for SynonymsActor {
-    type Result = ();
-    fn handle(&mut self, msg: AddrMessage, _: &mut SyncContext<Self>) -> Self::Result {
-        self.dict_addr_vector.push(msg.addr);
     }
 }

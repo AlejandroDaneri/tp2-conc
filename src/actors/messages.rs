@@ -2,7 +2,7 @@
 
 use crate::counter::Counter;
 use crate::synonym::QueryResponse;
-use actix::{prelude::Message, Recipient};
+use actix::prelude::Message;
 
 /// Mensaje de palaba a buscar sobre una pagina
 pub struct WordMessage {
@@ -22,13 +22,4 @@ pub struct DictMessage {
 
 impl Message for DictMessage {
     type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
-}
-
-/// Mensaje de palabra a buscar
-pub struct AddrMessage {
-    pub addr: Recipient<DictMessage>,
-}
-
-impl Message for AddrMessage {
-    type Result = ();
 }
