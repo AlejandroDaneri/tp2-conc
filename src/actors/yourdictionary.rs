@@ -36,7 +36,7 @@ impl Actor for YourDictionaryActor {
 impl Handler<DictMessage> for YourDictionaryActor {
     type Result = ResponseFuture<Result<Vec<Counter>, Box<dyn std::error::Error + Send>>>;
 
-    fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
+    fn handle(&mut self, msg: DictMessage, _ctx: &mut Context<Self>) -> Self::Result {
         let words = msg.word.clone();
         let mut counters = Vec::new();
         let requester = self.requester.clone();
