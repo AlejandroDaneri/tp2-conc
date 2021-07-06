@@ -19,7 +19,7 @@ pub struct Balancer {
 }
 
 impl Balancer {
-    pub fn new(available_threads: usize, page_cooldown: u64, ids: &Vec<String>) -> Self {
+    pub fn new(available_threads: usize, page_cooldown: u64, ids: &[String]) -> Self {
         let id_timestamps = ids
             .iter()
             .map(|id| {
@@ -39,7 +39,7 @@ impl Balancer {
 
     /// Sólo se puede despertar el hilo  con el request más antiguo,
     /// si hay hilos disponibles
-    pub fn can_wakeup(&self, id: &String) -> bool {
+    pub fn can_wakeup(&self, id: &str) -> bool {
         let next_finder = self.id_timestamp_heap.peek().unwrap();
         self.available_threads > 0 && id.eq(&next_finder.0.id)
     }

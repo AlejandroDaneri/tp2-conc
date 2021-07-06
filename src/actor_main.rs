@@ -106,7 +106,7 @@ async fn run_search(
 
     for promise in promises {
         match promise.await {
-            Ok(Ok(counter)) => println!("RESULT: {:?}", counter.print_counter()),
+            Ok(Ok(counter)) => println!("{}", counter),
             Err(err) => log.error(format!("Mailbox Promise Error: {:?}", err)),
             Ok(Err(err)) => log.error(format!("{:?}", err)),
         };
