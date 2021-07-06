@@ -58,7 +58,7 @@ impl Searcher {
                 let word = counter.word.clone();
                 let prev_counter = result
                     .entry(word.clone())
-                    .or_insert(Counter::new(word.clone()));
+                    .or_insert_with(|| Counter::new(word));
                 prev_counter.merge(&counter)
             });
         result.values().for_each(|counter| {
