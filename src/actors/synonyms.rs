@@ -3,7 +3,8 @@
 use actix::prelude::{Actor, Context, Handler, Recipient, ResponseFuture};
 
 use crate::actors::messages::{DictMessage, WordMessage};
-use crate::{counter::Counter, logger};
+use crate::counter::Counter;
+use crate::logger;
 /// Actor encargado de derivar cada busqueda a los diferentes actores de las paginas en concreto
 pub struct SynonymsActor {
     dict_addr_vector: Vec<Recipient<DictMessage>>,
@@ -33,10 +34,17 @@ impl Actor for SynonymsActor {
 
 /// Handler for `WordMessage` message
 impl Handler<WordMessage> for SynonymsActor {
-    type Result = ResponseFuture<Result<Counter, ()>>;
+    type Result = ResponseFuture<Result<Vec<Counter>, ()>>;
     fn handle(&mut self, msg: WordMessage, _: &mut Context<Self>) -> Self::Result {
-        let mut counter = Counter::new(msg.word.clone());
-        let promises = self
+        let mut counters = Vec::new();
+        let mut pages_promises = Vec::new();
+        let c_msg = msg.clone();
+        let words = c_msg.word;
+
+        for word in words {
+            counters.push(Counter::new(word.clone()));
+        }
+        pages_promises = self
             .dict_addr_vector
             .iter()
             .map(|recipient| {
@@ -47,20 +55,20 @@ impl Handler<WordMessage> for SynonymsActor {
                 recipient.send(message)
             })
             .collect::<Vec<_>>();
+
         Box::pin(async move {
             let log = logger::Logger::new(logger::Level::Debug);
-            //let responses = join_all(promises).await?;
-            for promise in promises {
+            for promise in pages_promises {
                 let response = promise.await;
                 match response {
                     Ok(Ok(res)) => {
-                        counter.count(&res.synonyms);
+                        counters = res // mergear los vec<counter>
                     }
                     Ok(Err(err)) => log.error(format!("{:?}", err)), //TODO: mejorar mensaje de error
                     Err(err) => log.error(format!("{:?}", err)),
                 }
             }
-            Ok(counter)
+            Ok(counters)
         })
     }
 }

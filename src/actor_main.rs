@@ -4,20 +4,20 @@ mod logger;
 mod requester;
 pub mod synonym;
 
-use crate::actors::messages::RequestMessage;
-use crate::actors::requester::RequesterActor;
-use crate::synonym::thesaurus::Thesaurus;
+use actors::requester::RequesterActor;
+
 use actix::prelude::*;
+
+use actors::thesaurus::ThesaurusActor;
 
 use std::env;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
-use actors::merriamwebster::MerriamWebsterActor;
 use actors::messages::WordMessage;
 use actors::synonyms::SynonymsActor;
-use actors::thesaurus::ThesaurusActor;
+
 use actors::yourdictionary::YourDictionaryActor;
 
 #[actix::main]
@@ -60,30 +60,14 @@ async fn run_search(
 ) -> Result<(), ()> {
     log.info("Search starting with actors...".to_string());
     let requester_addr = SyncArbiter::start(max_conc_reqs, RequesterActor::new);
-    let merriam_addr = MerriamWebsterActor::new();
-    let your_dict_addr = YourDictionaryActor::new();
-    let thes_addr = ThesaurusActor::new();
+    // let merriam_addr = MerriamWebsterActor::new(requester_addr.clone()).start();
+    let your_dict_addr = YourDictionaryActor::new(requester_addr.clone()).start();
+    let thes_addr = ThesaurusActor::new(requester_addr.clone()).start();
 
-    thes_addr.add_requester(requester_addr);
-    your_dict_addr.add_requester(requester_addr);
-    merriam_addr.add_requester(requester_addr);
-
-    merriam_addr.start();
-    your_dict_addr.start();
-    thes_addr.start();
-
-    // start new actor
     let mut synonyms_actor = SynonymsActor::new();
 
-    synonyms_actor.add_dictionary_actor(thes_addr.recipient());
     synonyms_actor.add_dictionary_actor(your_dict_addr.recipient());
-    synonyms_actor.add_dictionary_actor(merriam_addr.recipient());
-    let addr = synonyms_actor.start();
-
-    let request_addr = SyncArbiter::start(1, RequesterActor::new);
-    let message = RequestMessage::<Thesaurus>::new("Hello");
-    let response = request_addr.send(message).await;
-    println!("Response: {:?}", response);
+    synonyms_actor.add_dictionary_actor(thes_addr.recipient());
 
     log.debug("Opening file".to_string());
     let f = match File::open(path) {
@@ -94,8 +78,7 @@ async fn run_search(
     let buffered = BufReader::new(f);
 
     log.debug("Reading file".to_string());
-    let mut promises = Vec::new();
-    let words = Vec::new();
+    let mut words = Vec::new();
     for line in buffered.lines() {
         match line {
             Ok(word) => {
@@ -109,14 +92,13 @@ async fn run_search(
         word: words,
         page_cooldown,
     };
-    promises.push(addr.send(message));
-    for promise in promises {
-        match promise.await {
-            Ok(Ok(counter)) => println!("{}", counter),
-            Err(err) => log.error(format!("Mailbox Promise Error: {:?}", err)),
-            Ok(Err(err)) => log.error(format!("{:?}", err)),
-        };
-    }
+
+    match synonyms_actor.start().send(message).await {
+        Ok(Ok(counter)) => println!("{:?}", counter),
+        Err(err) => log.error(format!("Mailbox Promise Error: {:?}", err)),
+        Ok(Err(err)) => log.error(format!("{:?}", err)),
+    };
+
     log.info("Finish".to_string());
     // stop system and exit
     System::current().stop();

@@ -12,7 +12,16 @@ pub struct WordMessage {
 }
 
 impl Message for WordMessage {
-    type Result = Result<Counter, ()>;
+    type Result = Result<Vec<Counter>, ()>;
+}
+
+impl Clone for WordMessage {
+    fn clone(&self) -> Self {
+        Self {
+            word: self.word.clone(),
+            page_cooldown: self.page_cooldown,
+        }
+    }
 }
 
 /// Mensaje de palabra a buscar
@@ -22,7 +31,7 @@ pub struct DictMessage {
 }
 
 impl Message for DictMessage {
-    type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
+    type Result = Result<Vec<Counter>, Box<dyn std::error::Error + Send>>;
 }
 
 /// Mensaje de palabra a buscar
