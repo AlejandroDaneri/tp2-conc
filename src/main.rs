@@ -2,6 +2,7 @@ extern crate reqwest;
 
 mod counter;
 mod logger;
+mod requester;
 mod synonym;
 
 use std::env;
