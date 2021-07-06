@@ -3,6 +3,9 @@ mod counter;
 mod logger;
 pub mod synonym;
 
+use crate::actors::messages::RequestMessage;
+use crate::actors::requester::RequesterActor;
+use crate::synonym::thesaurus::Thesaurus;
 use actix::prelude::*;
 
 use std::env;
@@ -58,14 +61,19 @@ async fn run_search(
 
     // start new actor
     let mut synonyms_actor = SynonymsActor::new();
-    let merriam_addr = SyncArbiter::start(max_conc_reqs, MerriamWebsterActor::new);
-    let your_dict_addr = SyncArbiter::start(max_conc_reqs, YourDictionaryActor::new);
-    let thes_addr = SyncArbiter::start(max_conc_reqs, ThesaurusActor::new);
+    let merriam_addr = SyncArbiter::start(1, MerriamWebsterActor::new);
+    let your_dict_addr = SyncArbiter::start(1, YourDictionaryActor::new);
+    let thes_addr = SyncArbiter::start(1, ThesaurusActor::new);
 
     synonyms_actor.add_dictionary_actor(thes_addr.recipient());
     synonyms_actor.add_dictionary_actor(your_dict_addr.recipient());
     synonyms_actor.add_dictionary_actor(merriam_addr.recipient());
     let addr = synonyms_actor.start();
+
+    let request_addr = SyncArbiter::start(1,RequesterActor::new);
+    let message = RequestMessage::<Thesaurus>::new("Hello");
+    let response = request_addr.send(message).await;
+    println!("Response: {:?}", response);
 
     log.debug("Opening file".to_string());
     let f = match File::open(path) {

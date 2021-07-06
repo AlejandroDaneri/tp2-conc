@@ -53,7 +53,6 @@ impl Handler<DictMessage> for ThesaurusActor {
     type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: DictMessage, _: &mut SyncContext<Self>) -> Self::Result {
-        self.sleep_if_necessary(msg.page_cooldown);
         if let Ok(res) = Thesaurus::new_query(&msg.word).find_synonyms() {
             Ok(res)
         } else {
