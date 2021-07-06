@@ -108,3 +108,17 @@ concurrencia (como los límites de requests o cooldowns).
 La implementación de actores fue mucho más prolija, porque cada actor era independiente del otro, pero la mayor complicación que nos presentó actix fue la interacción del runtime no bloqueante con operaciones bloqueantes, hasta que entendimos el uso de SyncArbiter.
 
 Para operaciones no bloqueantes Actix mostró ser un framework muy interesante.
+
+
+---
+
+## Actualización de reentrega
+
+### Parte A
+
+Eliminamos el uso de semáforos, utilizamos una conditionvar, que opera sobre una estructura protegida llamada balancer. Nos gustó mucho interactúa la cond-var con el balancer protegido. Al tomar la cond-var un sólo hilo por vez evalúa si está en condiciones de tomar el hilo, y si lo está (la condición es ser el hilo con más espera desde su último request), espera el tiempo de "cooldown" necesario entre requests de páginas. Una vez que suelto el "guard" de la cond-var, los otros hilos pueden evaluar su condición para salir de la espera de la condition variable. Una vez que se realizó el request, el hilo notifica a todos los hilos que ya pueden intentar despertarse e indica que ya hay un "hilo disponible".
+
+### Parte B
+
+Utilizamos un actor *requester*, que ejecuta requests de los actores específicos de cada diccionario. De esta forma desacoplamos la espera entre cada request (efectuada por el actor correspondiente a un sitio), de la ejecución sincrónica de un request. 
+Como este actor *requester* corre en un pool de threads de tamaño N, sabemos que cada hilo tiene un actor, por lo que se ejecuta con ese máximo de concurrencia. Esto nos arregla el bug de la versión anterior donde teníamos un hilo por cada actor "sitio", teniendo N hilos por cada sitio.
