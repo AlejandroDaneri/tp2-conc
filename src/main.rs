@@ -68,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let searcher = Searcher::new(words);
 
-    searcher.searchs(page_cooldown, max_conc_reqs);
+    searcher.searchs(page_cooldown, max_conc_reqs, log.clone());
     log.info("Finish".to_string());
 
     Ok(())

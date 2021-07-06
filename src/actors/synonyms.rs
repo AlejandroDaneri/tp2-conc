@@ -39,11 +39,6 @@ impl Handler<WordMessage> for SynonymsActor {
         let mut counters: Vec<Counter> = Vec::new();
         let mut pages_promises = Vec::new();
         let c_msg = msg.clone();
-        // let words = c_msg.word;
-
-        // for word in words {
-        //     counters.push(Counter::new(word.clone()));
-        // }
         pages_promises = self
             .dict_addr_vector
             .iter()

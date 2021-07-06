@@ -71,14 +71,18 @@ impl<T: 'static + Finder + Send> FinderExecutor<T> {
                 thread::spawn(move || {
                     {
                         let mut balancer_guard = cond_var_c
-                            .wait_while(balancer_c.lock().unwrap(), |bal| {
-                                !bal.can_wakeup(&query_id)
-                            })
-                            .unwrap();
+                            .wait_while(
+                                match balancer_c.lock() {
+                                    Ok(it) => it,
+                                    _ => unreachable!(),
+                                },
+                                |bal| !bal.can_wakeup(&query_id),
+                            )
+                            .map_err(|_| FinderError)?;
                         balancer_guard.take_thread();
                     }
                     let res = query.find_synonyms();
-                    balancer_c.lock().unwrap().release_thread();
+                    balancer_c.lock().map_err(|_| FinderError)?.release_thread();
                     cond_var_c.notify_all();
                     res
                 })

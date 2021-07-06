@@ -1,4 +1,5 @@
 use crate::counter::Counter;
+use crate::logger::Logger;
 use crate::synonym::balancer::Balancer;
 use crate::synonym::finder_executor::FinderExecutor;
 use crate::synonym::merriamwebster::MerriamWebster;
@@ -19,7 +20,7 @@ impl Searcher {
         Self { words }
     }
 
-    pub fn searchs(&self, page_cooldown: u64, max_conc_reqs: usize) {
+    pub fn searchs(&self, page_cooldown: u64, max_conc_reqs: usize, logger: Arc<Logger>) {
         let ids = vec![
             "MerriamWebster".to_string(),
             "Thesaurus".to_string(),
@@ -29,6 +30,7 @@ impl Searcher {
             max_conc_reqs,
             page_cooldown,
             &ids,
+            logger,
         )));
         let cond_var = Arc::new(Condvar::new());
         let mut handlers = vec![];
