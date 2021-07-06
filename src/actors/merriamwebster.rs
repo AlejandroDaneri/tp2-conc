@@ -3,8 +3,11 @@ use crate::{
     actors::messages::DictMessage,
     synonym::{merriamwebster::MerriamWebster, Finder, FinderError, QueryResponse},
 };
-use actix::prelude::{Actor, Handler};
-use actix::SyncContext;
+
+use actix::{
+    prelude::{Actor, Handler},
+    Context,
+};
 use std::thread;
 use std::time::{Duration, SystemTime};
 
@@ -35,7 +38,7 @@ impl MerriamWebsterActor {
 
 /// Declare actor and its context
 impl Actor for MerriamWebsterActor {
-    type Context = SyncContext<Self>;
+    type Context = Context<Self>;
 }
 
 impl Default for MerriamWebsterActor {
@@ -48,12 +51,8 @@ impl Default for MerriamWebsterActor {
 impl Handler<DictMessage> for MerriamWebsterActor {
     type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
 
-    fn handle(&mut self, msg: DictMessage, _: &mut SyncContext<Self>) -> Self::Result {
-        self.sleep_if_necessary(msg.page_cooldown);
-        if let Ok(res) = MerriamWebster::new_query(&msg.word).find_synonyms() {
-            Ok(res)
-        } else {
-            Err(Box::new(FinderError {}))
-        }
+    fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
+        // ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
+        // self.requester.send(Thesaurus::new_query(&msg.word).url())
     }
 }

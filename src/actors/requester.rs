@@ -2,8 +2,8 @@ use crate::synonym::Finder;
 use crate::synonym::FinderError;
 use crate::synonym::QueryResponse;
 use actix::Actor;
-use actix::SyncContext;
 use actix::Handler;
+use actix::SyncContext;
 
 use crate::actors::messages::RequestMessage;
 
@@ -12,7 +12,7 @@ pub struct RequesterActor;
 impl RequesterActor {
     /// Genera un RequesterActor
     pub fn new() -> Self {
-        Self{}
+        Self {}
     }
 }
 

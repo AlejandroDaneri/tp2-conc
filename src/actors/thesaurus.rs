@@ -6,8 +6,9 @@ use crate::{
 };
 use actix::{
     prelude::{Actor, Handler},
-    SyncContext,
+    Addr, AsyncContext,
 };
+use actix::{Context, WrapFuture};
 use std::thread;
 use std::time::{Duration, SystemTime};
 
@@ -15,6 +16,7 @@ use std::time::{Duration, SystemTime};
 
 pub struct ThesaurusActor {
     last_search_time: SystemTime,
+    requester: Addr,
 }
 
 impl ThesaurusActor {
@@ -35,6 +37,10 @@ impl ThesaurusActor {
         }
         self.last_search_time = now;
     }
+
+    pub fn add_requester(&mut self, requester: Addr) {
+        self.requester = requester
+    }
 }
 
 impl Default for ThesaurusActor {
@@ -45,18 +51,18 @@ impl Default for ThesaurusActor {
 
 /// Declare actor and its context
 impl Actor for ThesaurusActor {
-    type Context = SyncContext<Self>;
+    type Context = Context<Self>;
 }
 
 /// Handler for `WordMessage` message
 impl Handler<DictMessage> for ThesaurusActor {
     type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
 
-    fn handle(&mut self, msg: DictMessage, _: &mut SyncContext<Self>) -> Self::Result {
-        if let Ok(res) = Thesaurus::new_query(&msg.word).find_synonyms() {
-            Ok(res)
-        } else {
-            Err(Box::new(FinderError {}))
-        }
+    fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
+        // if duration.as_secs() < msg.page_cooldown {
+        //     thread::sleep(Duration::from_secs(page_cooldown - duration.as_secs()));
+        // }
+        // ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
+        // self.requester.send(Thesaurus::new_query(&msg.word).url())
     }
 }

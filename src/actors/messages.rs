@@ -1,13 +1,13 @@
 //! Modulo con los mensajes que se utilizan para la comunicacion entre actores
 
-use actix::prelude::Message;
 use crate::counter::Counter;
 use crate::synonym::QueryResponse;
+use actix::prelude::Message;
 use std::marker::PhantomData;
 
 /// Mensaje de palabra a buscar sobre una pagina
 pub struct WordMessage {
-    pub word: String,
+    pub word: Vec<String>,
     pub page_cooldown: u64,
 }
 
@@ -17,7 +17,7 @@ impl Message for WordMessage {
 
 /// Mensaje de palabra a buscar
 pub struct DictMessage {
-    pub word: String,
+    pub word: Vec<String>,
     pub page_cooldown: u64,
 }
 
@@ -32,10 +32,10 @@ pub struct RequestMessage<T> {
 }
 
 impl<T> RequestMessage<T> {
-    pub fn new (word: &str) -> Self {
+    pub fn new(word: &str) -> Self {
         RequestMessage::<T> {
             word: word.to_owned(),
-            _phantom: PhantomData
+            _phantom: PhantomData,
         }
     }
 }
