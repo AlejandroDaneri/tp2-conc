@@ -79,7 +79,6 @@ impl<T: 'static + Finder + Send> FinderExecutor<T> {
                     }
                     let res = query.find_synonyms();
                     balancer_c.lock().unwrap().release_thread();
-                    thread::sleep(std::time::Duration::from_secs(2));
                     cond_var_c.notify_all();
                     res
                 })
