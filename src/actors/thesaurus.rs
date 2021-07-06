@@ -7,7 +7,7 @@ use actix::{
     prelude::{Actor, Handler},
     Addr,
 };
-use actix::{AsyncContext, Context, ResponseFuture, WrapFuture};
+use actix::{Context, ResponseFuture};
 
 use std::time::{Duration, SystemTime};
 
@@ -16,14 +16,12 @@ use super::{messages::RequestMessage, requester::RequesterActor};
 /// Actor encargado de la busqueda sobre la pagina https://www.thesaurus.com/browse/
 
 pub struct ThesaurusActor {
-    // last_search_time: SystemTime,
     requester: Addr<RequesterActor>,
 }
 
 impl ThesaurusActor {
     /// Genera un ThesaurusActor
     pub fn new(requester: Addr<RequesterActor>) -> Self {
-        let _last_search_time = SystemTime::UNIX_EPOCH;
         Self { requester }
     }
 }
@@ -41,10 +39,22 @@ impl Handler<DictMessage> for ThesaurusActor {
         let words = msg.word.clone();
         let mut counters = Vec::new();
         let requester = self.requester.clone();
+        let mut last_search_time = SystemTime::UNIX_EPOCH;
 
         Box::pin(async move {
             for word in words {
-                actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).await;
+                let now = SystemTime::now();
+                let duration = match now.duration_since(last_search_time) {
+                    Ok(duration) => duration,
+                    _ => todo!(),
+                };
+                if duration.as_secs() < msg.page_cooldown {
+                    actix::clock::sleep(Duration::from_secs(
+                        msg.page_cooldown - duration.as_secs(),
+                    ))
+                    .await;
+                }
+                last_search_time = SystemTime::now();
                 let promise = requester.send(RequestMessage::<Thesaurus>::new(&word));
                 let response = promise.await;
                 match response {

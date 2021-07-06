@@ -2,27 +2,25 @@
 
 use crate::{
     actors::messages::DictMessage, actors::requester::RequesterActor, counter::Counter,
-    synonym::yourdictionary::YourDictionary,
+    synonym::merriamwebster::MerriamWebster,
 };
 use actix::{
     prelude::{Actor, Handler},
-    Addr, AsyncContext, Context, ResponseFuture, WrapFuture,
+    Addr, Context, ResponseFuture,
 };
 
-use std::time::Duration;
+use std::time::{Duration, SystemTime};
 
 use super::messages::RequestMessage;
 
 /// Actor encargado de la busqueda sobre la pagina https://thesaurus.yourdictionary.com/
 pub struct YourDictionaryActor {
-    // last_search_time: SystemTime,
     requester: Addr<RequesterActor>,
 }
 
 impl YourDictionaryActor {
     /// Genera un YourDictionaryActor
     pub fn new(requester: Addr<RequesterActor>) -> Self {
-        // let last_search_time = SystemTime::UNIX_EPOCH;
         Self { requester }
     }
 }
@@ -40,12 +38,23 @@ impl Handler<DictMessage> for YourDictionaryActor {
         let words = msg.word.clone();
         let mut counters = Vec::new();
         let requester = self.requester.clone();
+        let mut last_search_time = SystemTime::UNIX_EPOCH;
 
         Box::pin(async move {
             for word in words {
-                actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).await;
-                let promise = requester
-                    .send(RequestMessage::<YourDictionary>::new(&word));
+                let now = SystemTime::now();
+                let duration = match now.duration_since(last_search_time) {
+                    Ok(duration) => duration,
+                    _ => todo!(),
+                };
+                if duration.as_secs() < msg.page_cooldown {
+                    actix::clock::sleep(Duration::from_secs(
+                        msg.page_cooldown - duration.as_secs(),
+                    ))
+                    .await;
+                }
+                last_search_time = SystemTime::now();
+                let promise = requester.send(RequestMessage::<MerriamWebster>::new(&word));
                 let response = promise.await;
                 match response {
                     Ok(Ok(res)) => {
