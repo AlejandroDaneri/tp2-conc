@@ -1,7 +1,6 @@
 use crate::counter::Counter;
 use crate::synonym::balancer::Balancer;
 use crate::synonym::{Finder, FinderError, QueryResponse};
-use std::collections::HashMap;
 use std::marker::PhantomData;
 use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
@@ -24,7 +23,7 @@ impl<T: 'static + Finder + Send> FinderExecutor<T> {
         }
     }
 
-    pub fn execute(&self, words: &Vec<String>, balancer_enabled: bool) -> Vec<Counter> {
+    pub fn execute(&self, words: &[String], balancer_enabled: bool) -> Vec<Counter> {
         let handles;
         if balancer_enabled {
             handles = self.execute_sync_threaded(words)
@@ -47,7 +46,7 @@ impl<T: 'static + Finder + Send> FinderExecutor<T> {
 
     fn execute_full_threaded(
         &self,
-        words: &Vec<String>,
+        words: &[String],
     ) -> Vec<JoinHandle<Result<QueryResponse, FinderError>>> {
         words
             .iter()
@@ -60,7 +59,7 @@ impl<T: 'static + Finder + Send> FinderExecutor<T> {
 
     fn execute_sync_threaded(
         &self,
-        words: &Vec<String>,
+        words: &[String],
     ) -> Vec<JoinHandle<Result<QueryResponse, FinderError>>> {
         words
             .iter()
