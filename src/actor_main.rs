@@ -33,6 +33,7 @@ async fn main() -> Result<(), ()> {
     }
 
     let max_conc_reqs = match args[3].parse::<usize>() {
+        Ok(0) => 1000,
         Ok(num) => num,
         Err(err) => {
             log.error(format!("Error when parsing max_conc_reqs {}", err));
