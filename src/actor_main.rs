@@ -8,6 +8,7 @@ use actors::requester::RequesterActor;
 
 use actix::prelude::*;
 
+use actors::merriamwebster::MerriamWebsterActor;
 use actors::thesaurus::ThesaurusActor;
 
 use std::env;
@@ -60,7 +61,7 @@ async fn run_search(
 ) -> Result<(), ()> {
     log.info("Search starting with actors...".to_string());
     let requester_addr = SyncArbiter::start(max_conc_reqs, RequesterActor::new);
-    // let merriam_addr = MerriamWebsterActor::new(requester_addr.clone()).start();
+    let merriam_addr = MerriamWebsterActor::new(requester_addr.clone()).start();
     let your_dict_addr = YourDictionaryActor::new(requester_addr.clone()).start();
     let thes_addr = ThesaurusActor::new(requester_addr.clone()).start();
 
@@ -68,6 +69,7 @@ async fn run_search(
 
     synonyms_actor.add_dictionary_actor(your_dict_addr.recipient());
     synonyms_actor.add_dictionary_actor(thes_addr.recipient());
+    synonyms_actor.add_dictionary_actor(merriam_addr.recipient());
 
     log.debug("Opening file".to_string());
     let f = match File::open(path) {

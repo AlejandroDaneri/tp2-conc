@@ -1,15 +1,15 @@
 //! Modulo encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
-use std::time::Duration;
 
-use crate::{
-    actors::messages::DictMessage, actors::requester::RequesterActor, counter::Counter,
-    synonym::yourdictionary::YourDictionary,
-};
+use crate::{actors::messages::DictMessage, actors::requester::RequesterActor, counter::Counter};
+
+use crate::synonym::merriamwebster::MerriamWebster;
 
 use actix::{
     prelude::{Actor, Handler},
     Addr, AsyncContext, Context, ResponseFuture, WrapFuture,
 };
+
+use std::time::Duration;
 
 use super::messages::RequestMessage;
 
@@ -46,7 +46,7 @@ impl Handler<DictMessage> for MerriamWebsterActor {
 
             promises.push(
                 self.requester
-                    .send(RequestMessage::<YourDictionary>::new(&word)),
+                    .send(RequestMessage::<MerriamWebster>::new(&word)),
             );
         }
         Box::pin(async move {
