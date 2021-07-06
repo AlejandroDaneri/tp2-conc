@@ -94,7 +94,11 @@ async fn run_search(
     };
 
     match synonyms_actor.start().send(message).await {
-        Ok(Ok(counter)) => println!("{:?}", counter),
+        Ok(Ok(counters)) => {
+            for counter in counters {
+                println!("{}", counter);
+            }
+        }
         Err(err) => log.error(format!("Mailbox Promise Error: {:?}", err)),
         Ok(Err(err)) => log.error(format!("{:?}", err)),
     };

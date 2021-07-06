@@ -36,14 +36,14 @@ impl Actor for SynonymsActor {
 impl Handler<WordMessage> for SynonymsActor {
     type Result = ResponseFuture<Result<Vec<Counter>, ()>>;
     fn handle(&mut self, msg: WordMessage, _: &mut Context<Self>) -> Self::Result {
-        let mut counters = Vec::new();
+        let mut counters: Vec<Counter> = Vec::new();
         let mut pages_promises = Vec::new();
         let c_msg = msg.clone();
-        let words = c_msg.word;
+        // let words = c_msg.word;
 
-        for word in words {
-            counters.push(Counter::new(word.clone()));
-        }
+        // for word in words {
+        //     counters.push(Counter::new(word.clone()));
+        // }
         pages_promises = self
             .dict_addr_vector
             .iter()
@@ -62,7 +62,13 @@ impl Handler<WordMessage> for SynonymsActor {
                 let response = promise.await;
                 match response {
                     Ok(Ok(res)) => {
-                        counters = res // mergear los vec<counter>
+                        if !counters.is_empty() {
+                            for (i, counter_res) in res.iter().enumerate() {
+                                counters[i].merge(counter_res);
+                            }
+                        } else {
+                            counters = res
+                        }
                     }
                     Ok(Err(err)) => log.error(format!("{:?}", err)), //TODO: mejorar mensaje de error
                     Err(err) => log.error(format!("{:?}", err)),

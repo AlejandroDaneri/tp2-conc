@@ -31,10 +31,9 @@ impl<T: Finder> Handler<RequestMessage<T>> for RequesterActor {
     type Result = Result<QueryResponse, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: RequestMessage<T>, _: &mut SyncContext<Self>) -> Self::Result {
-        if let Ok(res) = T::new_query(&msg.word).find_synonyms() {
-            Ok(res)
-        } else {
-            Err(Box::new(FinderError {}))
+        match T::new_query(&msg.word).find_synonyms() {
+            Ok(res) => Ok(res),
+            Err(_) => Err(Box::new(FinderError {})),
         }
     }
 }
