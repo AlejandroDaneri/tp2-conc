@@ -52,7 +52,7 @@ impl Handler<DictMessage> for MerriamWebsterActor {
     type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
-        ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
-        self.requester.send(Thesaurus::new_query(&msg.word).url())
+        // ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
+        // self.requester.send(Thesaurus::new_query(&msg.word).url())
     }
 }

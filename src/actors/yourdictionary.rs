@@ -2,25 +2,26 @@
 
 use crate::{
     actors::messages::DictMessage,
-    synonym::{yourdictionary::YourDictionary, Finder, FinderError},
+    synonym::{thesaurus::Thesaurus, Finder},
 };
 use actix::{
     prelude::{Actor, Handler},
-    Context,
+    Addr, AsyncContext, Context, WrapFuture,
 };
 use std::thread;
 use std::time::{Duration, SystemTime};
 
 /// Actor encargado de la busqueda sobre la pagina https://thesaurus.yourdictionary.com/
 pub struct YourDictionaryActor {
-    last_search_time: SystemTime,
+    // last_search_time: SystemTime,
+    requester: Addr,
 }
 
 impl YourDictionaryActor {
     /// Genera un YourDictionaryActor
     pub fn new() -> Self {
-        let last_search_time = SystemTime::UNIX_EPOCH;
-        Self { last_search_time }
+        // let last_search_time = SystemTime::UNIX_EPOCH;
+        Self { requester: None }
     }
 
     pub fn sleep_if_necessary(&mut self, page_cooldown: u64) {
@@ -33,6 +34,10 @@ impl YourDictionaryActor {
             thread::sleep(Duration::from_secs(page_cooldown - duration.as_secs()));
         }
         self.last_search_time = now;
+    }
+
+    pub fn add_requester(&mut self, requester: Addr) {
+        self.requester = requester
     }
 }
 
@@ -52,7 +57,19 @@ impl Handler<DictMessage> for YourDictionaryActor {
     type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
-        ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
-        self.requester.send(Thesaurus::new_query(&msg.word).url())
+        let words = msg.word;
+
+        for word in words {
+            ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
+            let result = self
+                .requester
+                .send(Thesaurus::new_query(&msg.word).url())
+                .wait();
+            let syns = match result.find_synonyms() {
+                Ok(syns) => syns,
+                Err(_) => todo!(),
+            };
+            //
+        }
     }
 }

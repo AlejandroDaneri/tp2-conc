@@ -6,7 +6,7 @@ use crate::{
 };
 use actix::{
     prelude::{Actor, Handler},
-    AsyncContext,
+    Addr, AsyncContext,
 };
 use actix::{Context, WrapFuture};
 use std::thread;
@@ -16,6 +16,7 @@ use std::time::{Duration, SystemTime};
 
 pub struct ThesaurusActor {
     last_search_time: SystemTime,
+    requester: Addr,
 }
 
 impl ThesaurusActor {
@@ -36,6 +37,10 @@ impl ThesaurusActor {
         }
         self.last_search_time = now;
     }
+
+    pub fn add_requester(&mut self, requester: Addr) {
+        self.requester = requester
+    }
 }
 
 impl Default for ThesaurusActor {
@@ -54,7 +59,10 @@ impl Handler<DictMessage> for ThesaurusActor {
     type Result = Result<Vec<String>, Box<dyn std::error::Error + Send>>;
 
     fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
-        ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
-        self.requester.send(Thesaurus::new_query(&msg.word).url())
+        // if duration.as_secs() < msg.page_cooldown {
+        //     thread::sleep(Duration::from_secs(page_cooldown - duration.as_secs()));
+        // }
+        // ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
+        // self.requester.send(Thesaurus::new_query(&msg.word).url())
     }
 }

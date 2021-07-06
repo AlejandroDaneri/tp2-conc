@@ -87,22 +87,21 @@ async fn run_search(
 
     log.debug("Reading file".to_string());
     let mut promises = Vec::new();
+    let words = Vec::new();
     for line in buffered.lines() {
         match line {
             Ok(word) => {
-                log.debug(format!("Searching synonyms for {}", word));
-
-                // send message and get future for result
-                let message = WordMessage {
-                    word: word.to_owned(),
-                    page_cooldown,
-                };
-                promises.push(addr.send(message))
+                words.push(word);
             }
             Err(err) => log.error(format!("{:?}", err)),
         };
     }
-
+    // send message and get future for result
+    let message = WordMessage {
+        word: words,
+        page_cooldown,
+    };
+    promises.push(addr.send(message));
     for promise in promises {
         match promise.await {
             Ok(Ok(counter)) => println!("RESULT: {:?}", counter.print_counter()),

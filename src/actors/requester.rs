@@ -1,18 +1,15 @@
-//! Modulo encargado de la busqueda sobre la pagina https://www.thesaurus.com/browse/
+//!Actor encargado de hacer las request a las paginas
 
-use crate::{
-    actors::messages::DictMessage,
-    requester::Requester,
-    synonym::{thesaurus::Thesaurus, Finder, FinderError},
-};
+use crate::synonym::Finder;
+use crate::{actors::messages::DictMessage, requester::Requester};
 use actix::{
     prelude::{Actor, Handler},
-    Context, SyncContext,
+    SyncContext,
 };
 
 use super::messages::RequestMessage;
 
-/// Actor encargado de la busqueda sobre la pagina https://www.thesaurus.com/browse/
+/// Actor encargado de hacer las request a las paginas
 
 pub struct RequesterActor {}
 
@@ -34,7 +31,7 @@ impl Actor for RequesterActor {
     type Context = SyncContext<Self>;
 }
 
-/// Handler for `WordMessage` message
+/// Handler for `Request` message
 impl Handler<RequestMessage> for RequesterActor {
     type Result = Result<String, Box<dyn std::error::Error + Send>>;
 
