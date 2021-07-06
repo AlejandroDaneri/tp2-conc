@@ -37,9 +37,7 @@ impl Handler<WordMessage> for SynonymsActor {
     type Result = ResponseFuture<Result<Vec<Counter>, ()>>;
     fn handle(&mut self, msg: WordMessage, _: &mut Context<Self>) -> Self::Result {
         let mut counters: Vec<Counter> = Vec::new();
-        let mut pages_promises = Vec::new();
-        let _c_msg = msg.clone();
-        pages_promises = self
+        let pages_promises = self
             .dict_addr_vector
             .iter()
             .map(|recipient| {

@@ -68,7 +68,7 @@ impl Balancer {
                 panic!()
             }
         };
-        self.logger.info(format!("{:?} taken", id_ts.0.id));
+        self.logger.debug(format!("{:?} taken", id_ts.0.id));
         self.sleep_if_necessary(id_ts.0.timestamp);
         id_ts.0.timestamp = SystemTime::now();
         self.id_timestamp_heap.push(id_ts);
@@ -76,7 +76,7 @@ impl Balancer {
     }
 
     pub fn release_thread(&mut self) {
-        self.logger.info("Release".to_string());
+        self.logger.debug("Release".to_string());
         self.available_threads += 1;
     }
 
@@ -85,7 +85,7 @@ impl Balancer {
         let duration = match now.duration_since(last_search_time) {
             Ok(duration) => duration,
             _ => {
-                self.logger.error("Error calculating duration".to_string());
+                self.logger.warn("Error calculating duration".to_string());
                 panic!()
             }
         };

@@ -1,5 +1,6 @@
 //! Modulo encargado de la busqueda sobre la pagina https://www.merriam-webster.com/thesaurus/
 
+use crate::logger;
 use crate::{actors::messages::DictMessage, actors::requester::RequesterActor, counter::Counter};
 
 use crate::synonym::merriamwebster::MerriamWebster;
@@ -41,13 +42,21 @@ impl Handler<DictMessage> for MerriamWebsterActor {
         let mut last_search_time = SystemTime::UNIX_EPOCH;
 
         Box::pin(async move {
+            let log = logger::Logger::new(logger::Level::Debug);
             for word in words {
                 let now = SystemTime::now();
                 let duration = match now.duration_since(last_search_time) {
                     Ok(duration) => duration,
-                    _ => todo!(),
+                    _ => {
+                        log.warn("Missing arguments".to_string());
+                        panic!()
+                    }
                 };
                 if duration.as_secs() < msg.page_cooldown {
+                    log.debug(format!(
+                        "Merriam waiting {} seconds",
+                        msg.page_cooldown - duration.as_secs()
+                    ));
                     actix::clock::sleep(Duration::from_secs(
                         msg.page_cooldown - duration.as_secs(),
                     ))
@@ -62,8 +71,8 @@ impl Handler<DictMessage> for MerriamWebsterActor {
                         counter.count(&res.synonyms);
                         counters.push(counter);
                     }
-                    Ok(Err(_err)) => todo!(), //TODO: mejorar mensaje de error
-                    Err(_err) => todo!(),
+                    Ok(Err(_err)) => log.error("Error parsing QueryResponse".to_string()),
+                    Err(_err) => log.error(" Mailbox Error".to_string()),
                 }
             }
             Ok(counters)

@@ -1,7 +1,7 @@
 //! Modulo encargado de la busqueda sobre la pagina https://thesaurus.yourdictionary.com/
 
 use crate::{
-    actors::messages::DictMessage, actors::requester::RequesterActor, counter::Counter,
+    actors::messages::DictMessage, actors::requester::RequesterActor, counter::Counter, logger,
     synonym::merriamwebster::MerriamWebster,
 };
 use actix::{
@@ -41,13 +41,21 @@ impl Handler<DictMessage> for YourDictionaryActor {
         let mut last_search_time = SystemTime::UNIX_EPOCH;
 
         Box::pin(async move {
+            let log = logger::Logger::new(logger::Level::Debug);
             for word in words {
                 let now = SystemTime::now();
                 let duration = match now.duration_since(last_search_time) {
                     Ok(duration) => duration,
-                    _ => todo!(),
+                    _ => {
+                        log.error("Error calculating duration".to_string());
+                        panic!()
+                    }
                 };
                 if duration.as_secs() < msg.page_cooldown {
+                    log.debug(format!(
+                        "Your Waiting {} seconds",
+                        msg.page_cooldown - duration.as_secs()
+                    ));
                     actix::clock::sleep(Duration::from_secs(
                         msg.page_cooldown - duration.as_secs(),
                     ))
@@ -62,8 +70,8 @@ impl Handler<DictMessage> for YourDictionaryActor {
                         counter.count(&res.synonyms);
                         counters.push(counter);
                     }
-                    Ok(Err(_err)) => todo!(), //TODO: mejorar mensaje de error
-                    Err(_err) => todo!(),
+                    Ok(Err(_err)) => log.error("Error parsing QueryResponse".to_string()),
+                    Err(_err) => log.error(" Mailbox Error".to_string()),
                 }
             }
             Ok(counters)

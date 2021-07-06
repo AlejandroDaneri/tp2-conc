@@ -2,6 +2,7 @@
 
 use crate::counter::Counter;
 
+use crate::logger;
 use crate::{actors::messages::DictMessage, synonym::thesaurus::Thesaurus};
 use actix::{
     prelude::{Actor, Handler},
@@ -42,13 +43,22 @@ impl Handler<DictMessage> for ThesaurusActor {
         let mut last_search_time = SystemTime::UNIX_EPOCH;
 
         Box::pin(async move {
+            let log = logger::Logger::new(logger::Level::Debug);
             for word in words {
                 let now = SystemTime::now();
                 let duration = match now.duration_since(last_search_time) {
                     Ok(duration) => duration,
-                    _ => todo!(),
+                    _ => {
+                        log.warn("Error calculating duration".to_string());
+                        panic!()
+                    }
                 };
                 if duration.as_secs() < msg.page_cooldown {
+                    log.debug(format!(
+                        "Thesaurus Waiting {} seconds",
+                        msg.page_cooldown - duration.as_secs()
+                    ));
+
                     actix::clock::sleep(Duration::from_secs(
                         msg.page_cooldown - duration.as_secs(),
                     ))
@@ -63,8 +73,8 @@ impl Handler<DictMessage> for ThesaurusActor {
                         counter.count(&res.synonyms);
                         counters.push(counter);
                     }
-                    Ok(Err(_err)) => todo!(), //TODO: mejorar mensaje de error
-                    Err(_err) => todo!(),
+                    Ok(Err(_err)) => log.error("Error parsing QueryResponse".to_string()),
+                    Err(_err) => log.error(" Mailbox Error".to_string()),
                 }
             }
             Ok(counters)
