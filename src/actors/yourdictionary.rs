@@ -37,20 +37,15 @@ impl Handler<DictMessage> for YourDictionaryActor {
     type Result = ResponseFuture<Result<Vec<Counter>, Box<dyn std::error::Error + Send>>>;
 
     fn handle(&mut self, msg: DictMessage, ctx: &mut Context<Self>) -> Self::Result {
-        let words = msg.word;
-        let mut promises = Vec::new();
+        let words = msg.word.clone();
         let mut counters = Vec::new();
+        let requester = self.requester.clone();
 
-        for word in words {
-            ctx.wait(actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).into_actor(self));
-
-            promises.push(
-                self.requester
-                    .send(RequestMessage::<YourDictionary>::new(&word)),
-            );
-        }
         Box::pin(async move {
-            for promise in promises {
+            for word in words {
+                actix::clock::sleep(Duration::from_secs(msg.page_cooldown)).await;
+                let promise = requester
+                    .send(RequestMessage::<YourDictionary>::new(&word));
                 let response = promise.await;
                 match response {
                     Ok(Ok(res)) => {
